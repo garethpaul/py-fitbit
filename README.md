@@ -1,0 +1,4 @@
+py-fitbit
+=========
+
+Fitbit Auth
