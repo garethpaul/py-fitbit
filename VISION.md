@@ -34,6 +34,11 @@ Contribution rules:
 
 ## Security And Responsible Use
 
+Canonical security policy and reporting:
+
+- [`SECURITY.md`](SECURITY.md)
+
+
 Fitbit data can include sensitive health and activity information. The sample
 should keep credentials local, avoid debug output of tokens or responses, and
 make any data access path explicit to the user.
