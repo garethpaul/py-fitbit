@@ -1,5 +1,8 @@
 # py-fitbit
 
+<!-- README-OVERVIEW-IMAGE -->
+![Project overview](docs/readme-overview.svg)
+
 ## Overview
 
 `garethpaul/py-fitbit` is a public sample, documentation, or utility project. Fitbit Auth
@@ -68,4 +71,3 @@ Keep changes small and tied to the project that is already present in this repos
 Prior README summary:
 
 > py-fitbit <!-- README-OVERVIEW-IMAGE --> py-fitbit ========= Fitbit Auth
-
