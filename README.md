@@ -12,21 +12,28 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 ## Repository Contents
 
 - `README.md` - project overview and local usage notes
+- `CHANGES.md` - notable maintenance changes
+- `Makefile` - local verification entry points
+- `plans` - completed maintenance plans
+- `scripts` - deterministic legacy safety checks
 - `SECURITY.md` - security reporting and disclosure guidance
 - `VISION.md` - project direction and maintenance guardrails
 
 Additional scan context:
 
-- Source directories: no top-level source directories detected
-- Dependency and build manifests: none detected
-- Entry points or build surfaces: none detected
-- Test-looking files: no obvious test files detected
+- Source directories: scripts
+- Dependency and build manifests: Makefile
+- Entry points or build surfaces: fitbit.py, Makefile
+- Test-looking files: scripts/check_legacy_fitbit.py
 
 ## Getting Started
 
 ### Prerequisites
 
 - Git
+- Python 2.7 for the legacy sample syntax check
+- Python 3 for repository safety checks
+- `make`
 
 ### Setup
 
@@ -39,11 +46,14 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 ## Running or Using the Project
 
-- No single runtime entry point was identified. Start by reading the source files and manifests listed above.
+- Create a local, untracked `settings.py` with `CONSUMER_KEY` and `CONSUMER_SECRET`.
+- Run `fitbit.py` with Python 2.7 if you need to exercise the legacy OAuth 1 flow.
+- `access_token.string` is a local token cache and must stay untracked.
 
 ## Testing and Verification
 
-- No dedicated automated test command was identified from the checked-in files. Verify changes by running the relevant build or manually exercising the sample.
+- Run `make verify` before committing changes.
+- The verification gate compiles the Python 2 source and checks that credential/token handling stays local and debug logging is disabled by default.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 

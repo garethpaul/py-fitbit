@@ -13,7 +13,7 @@ REQUEST_TOKEN_URL = 'http://%s/oauth/request_token' % SERVER
 ACCESS_TOKEN_URL = 'http://%s/oauth/access_token' % SERVER
 AUTHORIZATION_URL = 'http://%s/oauth/authorize' % SERVER
 ACCESS_TOKEN_STRING_FNAME = 'access_token.string'
-DEBUG = True
+DEBUG = False
 
 
 def fetch_response(oauth_request, connection, debug=DEBUG):
@@ -101,4 +101,3 @@ def fitbit(api_call):
 
 if __name__ == '__main__':
    print json.loads(fitbit('/1/user/-/sleep/date/2013-08-31.json'))
-
