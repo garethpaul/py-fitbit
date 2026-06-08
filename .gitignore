@@ -1,3 +1,4 @@
-settings.py
+settings.local.py
+access_token.string
 *.pyc
 *.py~
