@@ -33,6 +33,8 @@ Additional scan context:
 ```bash
 git clone https://github.com/garethpaul/py-fitbit.git
 cd py-fitbit
+export FITBIT_CONSUMER_KEY="your-fitbit-consumer-key"
+export FITBIT_CONSUMER_SECRET="your-fitbit-consumer-secret"
 ```
 
 The setup commands above are derived from repository files. Legacy mobile, Python, or JavaScript samples may require older SDKs or package versions than a modern workstation uses by default.
@@ -50,6 +52,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 ## Configuration and Secrets
 
 - Detected references to Fitbit. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
+- `fitbit.py` reads Fitbit OAuth credentials from `FITBIT_CONSUMER_KEY` and `FITBIT_CONSUMER_SECRET`; do not commit real credentials or generated `access_token.string` files.
 
 ## Security and Privacy Notes
 
