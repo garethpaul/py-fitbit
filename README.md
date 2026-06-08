@@ -70,4 +70,4 @@ Keep changes small and tied to the project that is already present in this repos
 
 Prior README summary:
 
-> py-fitbit <!-- README-OVERVIEW-IMAGE --> py-fitbit ========= Fitbit Auth
+> py-fitbit py-fitbit ========= Fitbit Auth
