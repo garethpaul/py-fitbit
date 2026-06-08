@@ -44,3 +44,6 @@ make any data access path explicit to the user.
 - Debug logging of protected responses by default
 - Silent uploads or forwarding of user data
 - OAuth rewrites without compatibility notes
+
+This list is a roadmap guardrail, not a permanent rule.
+Strong user demand and strong technical rationale can change it.
