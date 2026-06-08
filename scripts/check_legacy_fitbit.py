@@ -25,6 +25,12 @@ if re.search(r"^DEBUG\s*=\s*True\b", SOURCE, flags=re.MULTILINE):
 if "CONSUMER_SECRET" not in SOURCE or "settings.CONSUMER_SECRET" not in SOURCE:
     errors.append("fitbit.py must load the consumer secret from local settings")
 
+if "write_access_token_string" not in SOURCE or "0600" not in SOURCE:
+    errors.append("fitbit.py must write access_token.string with owner-only permissions")
+
+if "read_access_token_string" not in SOURCE:
+    errors.append("fitbit.py must read access_token.string through a token helper")
+
 if errors:
     print("\n".join(errors), file=sys.stderr)
     sys.exit(1)

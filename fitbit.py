@@ -16,6 +16,31 @@ ACCESS_TOKEN_STRING_FNAME = 'access_token.string'
 DEBUG = False
 
 
+def read_access_token_string(fname=ACCESS_TOKEN_STRING_FNAME):
+   fobj = open(fname)
+   try:
+      return fobj.read()
+   finally:
+      fobj.close()
+
+
+def write_access_token_string(access_token_string, fname=ACCESS_TOKEN_STRING_FNAME):
+   fd = os.open(fname, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0600)
+   try:
+      if hasattr(os, 'fchmod'):
+         os.fchmod(fd, 0600)
+      else:
+         os.chmod(fname, 0600)
+      fobj = os.fdopen(fd, 'w')
+   except:
+      os.close(fd)
+      raise
+   try:
+      fobj.write(access_token_string)
+   finally:
+      fobj.close()
+
+
 def fetch_response(oauth_request, connection, debug=DEBUG):
    url= oauth_request.to_url()
    connection.request(oauth_request.http_method,url)
@@ -74,17 +99,13 @@ def fitbit(api_call):
       # write the access token to file; next time we just read it from file
       if DEBUG:
          print 'Writing file', ACCESS_TOKEN_STRING_FNAME
-      fobj = open(ACCESS_TOKEN_STRING_FNAME, 'w')
       access_token_string = access_token.to_string()
-      fobj.write(access_token_string)
-      fobj.close()
+      write_access_token_string(access_token_string)
 
    else:
       if DEBUG:
          print 'Reading file', ACCESS_TOKEN_STRING_FNAME
-      fobj = open(ACCESS_TOKEN_STRING_FNAME)
-      access_token_string = fobj.read()
-      fobj.close()
+      access_token_string = read_access_token_string()
 
       access_token = oauth.OAuthToken.from_string(access_token_string)
 

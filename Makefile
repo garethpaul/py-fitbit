@@ -1,9 +1,11 @@
 .PHONY: check docs lint test verify
 
 docs:
-	test -f docs/plans/2026-06-08-py-fitbit-baseline.md
-	grep -q "Status: Completed" docs/plans/2026-06-08-py-fitbit-baseline.md
-	grep -q "make check" docs/plans/2026-06-08-py-fitbit-baseline.md
+	@for plan in docs/plans/*.md; do \
+		test -f "$$plan"; \
+		grep -q "Status: Completed" "$$plan"; \
+		grep -q "make check" "$$plan"; \
+	done
 
 lint:
 	python2 -c "import py_compile; py_compile.compile('fitbit.py', cfile='/tmp/py-fitbit-fitbit.pyc', doraise=True)"

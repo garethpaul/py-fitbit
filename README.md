@@ -50,12 +50,13 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 - Create a local, untracked `settings.py` with `CONSUMER_KEY` and `CONSUMER_SECRET`.
 - Run `fitbit.py` with Python 2.7 if you need to exercise the legacy OAuth 1 flow.
-- `access_token.string` is a local token cache and must stay untracked.
+- `access_token.string` is a local token cache, must stay untracked, and is
+  written with owner-only permissions.
 
 ## Testing and Verification
 
 - Run `make check` before committing changes.
-- `make check` delegates to `make verify`, which compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, runs a mocked OAuth request test without contacting Fitbit, and verifies the canonical completed plan under `docs/plans`.
+- `make check` delegates to `make verify`, which compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, runs mocked OAuth request and token-cache tests without contacting Fitbit, and verifies completed plans under `docs/plans`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -75,6 +76,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `VISION.md` for project direction and contribution guardrails.
 - See `docs/plans/2026-06-08-py-fitbit-baseline.md` for the canonical legacy
   safety and mocked OAuth request baseline.
+- See `docs/plans/2026-06-08-token-cache-permissions.md` for the token-cache
+  permissions baseline.
 
 ## Contributing
 

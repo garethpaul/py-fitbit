@@ -4,6 +4,7 @@
 import os
 import shutil
 import StringIO
+import stat
 import sys
 import tempfile
 import types
@@ -156,6 +157,16 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         self.assertEqual(
             [('GET', '/1/user/-/profile.json', {'Authorization': 'OAuth realm=api.fitbit.com'})],
             connection.requests,
+        )
+
+    def test_access_token_cache_uses_owner_only_permissions(self):
+        fitbit.write_access_token_string('oauth_token=cached&oauth_token_secret=secret')
+
+        mode = stat.S_IMODE(os.stat(fitbit.ACCESS_TOKEN_STRING_FNAME).st_mode)
+        self.assertEqual(0600, mode)
+        self.assertEqual(
+            'oauth_token=cached&oauth_token_secret=secret',
+            fitbit.read_access_token_string(),
         )
 
 

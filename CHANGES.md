@@ -2,6 +2,8 @@
 
 ## 2026-06-08
 
+- Added owner-only file permission handling and mocked coverage for the local
+  OAuth access-token cache.
 - Added `make verify` and `make check` for Python 2 syntax checking and repository-local credential safety checks.
 - Disabled debug logging by default so protected URLs and responses are not printed unless explicitly requested.
 - Added `access_token.string` to `.gitignore` so the local OAuth token cache stays out of git.
