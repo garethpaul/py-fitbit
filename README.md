@@ -17,14 +17,15 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 - `plans` - completed maintenance plans
 - `scripts` - deterministic legacy safety checks
 - `SECURITY.md` - security reporting and disclosure guidance
+- `tests` - Python 2 mock-based tests for the legacy OAuth request path
 - `VISION.md` - project direction and maintenance guardrails
 
 Additional scan context:
 
-- Source directories: scripts
+- Source directories: scripts, tests
 - Dependency and build manifests: Makefile
 - Entry points or build surfaces: fitbit.py, Makefile
-- Test-looking files: scripts/check_legacy_fitbit.py
+- Test-looking files: scripts/check_legacy_fitbit.py, tests/test_fitbit_oauth_request.py
 
 ## Getting Started
 
@@ -53,7 +54,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Testing and Verification
 
 - Run `make verify` before committing changes.
-- The verification gate compiles the Python 2 source and checks that credential/token handling stays local and debug logging is disabled by default.
+- The verification gate compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, and runs a mocked OAuth request test without contacting Fitbit.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 

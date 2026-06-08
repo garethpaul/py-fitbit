@@ -26,6 +26,5 @@ ignored.
 
 ## Follow-Up Candidates
 
-- Add mock-based tests around OAuth request construction.
 - Move token storage behind a small helper with file-permission checks.
 - Document whether the demonstrated Fitbit OAuth 1 flow is still supported.
