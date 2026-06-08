@@ -38,7 +38,7 @@ Fitbit data can include sensitive health and activity information. The sample
 should keep credentials local, avoid debug output of tokens or responses, and
 make any data access path explicit to the user.
 
-## What We Will Not Merge For Now
+## What We Will Not Merge (For Now)
 
 - Checked-in credentials or access-token files
 - Debug logging of protected responses by default
