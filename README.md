@@ -14,6 +14,7 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 - `README.md` - project overview and local usage notes
 - `CHANGES.md` - notable maintenance changes
 - `Makefile` - local verification entry points
+- `docs/plans` - canonical completed maintenance plans
 - `plans` - completed maintenance plans
 - `scripts` - deterministic legacy safety checks
 - `SECURITY.md` - security reporting and disclosure guidance
@@ -54,7 +55,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Testing and Verification
 
 - Run `make check` before committing changes.
-- `make check` delegates to `make verify`, which compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, and runs a mocked OAuth request test without contacting Fitbit.
+- `make check` delegates to `make verify`, which compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, runs a mocked OAuth request test without contacting Fitbit, and verifies the canonical completed plan under `docs/plans`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -72,6 +73,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
+- See `docs/plans/2026-06-08-py-fitbit-baseline.md` for the canonical legacy
+  safety and mocked OAuth request baseline.
 
 ## Contributing
 
