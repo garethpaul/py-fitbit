@@ -53,8 +53,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 ## Testing and Verification
 
-- Run `make verify` before committing changes.
-- The verification gate compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, and runs a mocked OAuth request test without contacting Fitbit.
+- Run `make check` before committing changes.
+- `make check` delegates to `make verify`, which compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, and runs a mocked OAuth request test without contacting Fitbit.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 

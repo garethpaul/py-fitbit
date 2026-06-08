@@ -16,7 +16,7 @@ Priority:
 - Preserve the OAuth request, authorize, and access-token flow
 - Keep consumer keys and secrets in local settings only
 - Treat Python 2 syntax and OAuth 1-era endpoints as legacy
-- Maintain `make verify` for Python 2 syntax and credential-safety checks
+- Maintain `make check` for Python 2 syntax and credential-safety checks
 - Avoid printing or committing real access tokens
 
 Next priorities:

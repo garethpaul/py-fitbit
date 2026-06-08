@@ -1,4 +1,4 @@
-.PHONY: lint test verify
+.PHONY: check lint test verify
 
 lint:
 	python2 -c "import py_compile; py_compile.compile('fitbit.py', cfile='/tmp/py-fitbit-fitbit.pyc', doraise=True)"
@@ -8,3 +8,5 @@ test:
 	python2 tests/test_fitbit_oauth_request.py
 
 verify: lint test
+
+check: verify
