@@ -56,7 +56,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Testing and Verification
 
 - Run `make check` before committing changes.
-- `make check` delegates to `make verify`, which compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, runs mocked OAuth request and token-cache tests without contacting Fitbit, and verifies completed plans under `docs/plans`.
+- `make check` delegates to `make verify`, which compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, runs mocked OAuth request, request-token flow, and token-cache tests without contacting Fitbit, and verifies completed plans under `docs/plans`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -78,6 +78,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   safety and mocked OAuth request baseline.
 - See `docs/plans/2026-06-08-token-cache-permissions.md` for the token-cache
   permissions baseline.
+- See `docs/plans/2026-06-08-request-token-flow-test.md` for the mocked
+  no-cache OAuth flow baseline.
 
 ## Contributing
 

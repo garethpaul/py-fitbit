@@ -2,6 +2,8 @@
 
 ## 2026-06-08
 
+- Added mocked coverage for the no-cache OAuth request-token/access-token flow
+  and owner-only token cache write.
 - Added owner-only file permission handling and mocked coverage for the local
   OAuth access-token cache.
 - Added `make verify` and `make check` for Python 2 syntax checking and repository-local credential safety checks.

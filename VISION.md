@@ -23,6 +23,7 @@ Priority:
 - Maintain `make check` for Python 2 syntax and credential-safety checks
 - Avoid printing or committing real access tokens
 - Keep local token-cache files owner-only
+- Keep cached-token and request-token OAuth branches covered by mocks
 - Keep completed maintenance plans under `docs/plans`
 
 Next priorities:
