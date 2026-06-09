@@ -53,6 +53,9 @@ def validate_api_call(api_call):
    if any(char.isspace() for char in api_call):
       raise ValueError('api_call must not contain whitespace')
 
+   if '#' in api_call:
+      raise ValueError('api_call must not contain a fragment')
+
    return api_call
 
 

@@ -57,6 +57,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   before a network connection is opened.
 - Protected-resource paths are trimmed at the edges but must not contain raw
   whitespace or control characters.
+- Protected-resource paths must not include URL fragments.
 - `access_token.string` is a local token cache, must stay untracked, and is
   written with owner-only permissions.
 
@@ -78,6 +79,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include fitbit.py.
 - Protected Fitbit resource paths reject embedded whitespace before network
   requests are opened.
+- Protected Fitbit resource paths reject fragments before network requests are
+  opened.
 
 ## Maintenance Notes
 
@@ -93,6 +96,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   resource API path guard.
 - See `docs/plans/2026-06-09-api-call-whitespace-validation.md` for the
   protected resource path whitespace guard.
+- See `docs/plans/2026-06-09-api-call-fragment-validation.md` for the
+  protected resource path fragment guard.
 - See `docs/plans/2026-06-09-oauth-endpoint-https.md` for the OAuth endpoint
   HTTPS guard.
 

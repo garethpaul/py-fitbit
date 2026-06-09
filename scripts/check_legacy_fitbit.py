@@ -46,6 +46,9 @@ if (
 if ".isspace()" not in SOURCE:
     errors.append("fitbit.py must reject whitespace inside protected API paths")
 
+if "'#' in api_call" not in SOURCE and '"#" in api_call' not in SOURCE:
+    errors.append("fitbit.py must reject fragments inside protected API paths")
+
 if errors:
     print("\n".join(errors), file=sys.stderr)
     sys.exit(1)

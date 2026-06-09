@@ -8,6 +8,8 @@
   scheme-relative URLs are rejected before any Fitbit network connection opens.
 - Added protected resource API path whitespace validation before Fitbit network
   connections open.
+- Added protected resource API path fragment validation before Fitbit network
+  connections open.
 
 ## 2026-06-08
 

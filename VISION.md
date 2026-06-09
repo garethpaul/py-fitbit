@@ -26,6 +26,7 @@ Priority:
 - Keep cached-token and request-token OAuth branches covered by mocks
 - Keep protected resource calls constrained to Fitbit API paths
 - Reject raw whitespace inside protected resource API paths
+- Reject URL fragments inside protected resource API paths
 - Keep OAuth endpoints pinned to HTTPS
 - Keep completed maintenance plans under `docs/plans`
 

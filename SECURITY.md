@@ -35,7 +35,7 @@ Helpful reports include:
 
 For web services, APIs, sockets, or scraping workflows, prioritize reports involving authentication bypass, authorization errors, injection, server-side request forgery, unsafe deserialization, credential leakage, data exposure, or denial-of-service conditions. Use test accounts and minimal proof-of-concept traffic only.
 
-Protected Fitbit resource calls should be passed as API paths such as `/1/user/-/profile.json`. The sample rejects absolute URLs, scheme-relative URLs, and paths with embedded raw whitespace before opening a network connection.
+Protected Fitbit resource calls should be passed as API paths such as `/1/user/-/profile.json`. The sample rejects absolute URLs, scheme-relative URLs, paths with embedded raw whitespace, and URL fragments before opening a network connection.
 
 ## Dependency and Supply Chain Security
 
