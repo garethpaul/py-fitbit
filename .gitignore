@@ -1,4 +1,5 @@
 settings.py
 access_token.string
 *.pyc
+__pycache__/
 *.py~

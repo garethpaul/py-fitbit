@@ -19,6 +19,26 @@ errors = []
 if "access_token.string" not in GITIGNORE_LINES:
     errors.append(".gitignore must ignore access_token.string")
 
+if "__pycache__/" not in GITIGNORE_LINES:
+    errors.append(".gitignore must ignore __pycache__/")
+
+bytecode_files = sorted(
+    str(path.relative_to(ROOT))
+    for path in ROOT.rglob("*.pyc")
+    if ".git" not in path.parts
+)
+bytecode_dirs = sorted(
+    str(path.relative_to(ROOT))
+    for path in ROOT.rglob("__pycache__")
+    if ".git" not in path.parts
+)
+if bytecode_files or bytecode_dirs:
+    generated = bytecode_files + bytecode_dirs
+    errors.append(
+        "Python bytecode files must not be kept in the repository tree: %s"
+        % ", ".join(generated)
+    )
+
 if re.search(r"^DEBUG\s*=\s*True\b", SOURCE, flags=re.MULTILINE):
     errors.append("fitbit.py must not enable DEBUG by default")
 

@@ -72,6 +72,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Run `make build` for the static legacy verification gate; it uses the same
   mocked Python 2 tests as `make test`.
 - `make check` delegates to `make verify`, which compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, runs mocked OAuth request, request-token flow, API path validation, and token-cache tests without contacting Fitbit, and verifies completed plans under `docs/plans`.
+- The test target disables Python bytecode writes, and the legacy safety check
+  rejects checked-out `.pyc` files or `__pycache__` directories.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -115,6 +117,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   protected resource path credential-query guard.
 - See `docs/plans/2026-06-09-oauth-endpoint-https.md` for the OAuth endpoint
   HTTPS guard.
+- See `docs/plans/2026-06-09-bytecode-free-verification.md` for the
+  bytecode-free legacy verification guard.
 
 ## Contributing
 

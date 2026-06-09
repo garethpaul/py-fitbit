@@ -2,6 +2,7 @@
 
 ## 2026-06-09
 
+- Added bytecode-free verification coverage for the legacy Python 2 tests.
 - Switched OAuth request, access-token, and authorization endpoint constants to
   HTTPS and added regression coverage for them.
 - Added protected resource API path dot-segment validation, including

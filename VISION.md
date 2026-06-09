@@ -33,6 +33,7 @@ Priority:
   paths
 - Reject credential query parameters inside protected resource API paths
 - Keep OAuth endpoints pinned to HTTPS
+- Keep legacy verification from leaving Python bytecode in the repository tree
 - Keep completed maintenance plans under `docs/plans`
 
 Next priorities:

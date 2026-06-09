@@ -12,7 +12,7 @@ lint:
 	python3 scripts/check_legacy_fitbit.py
 
 test:
-	python2 tests/test_fitbit_oauth_request.py
+	PYTHONDONTWRITEBYTECODE=1 python2 tests/test_fitbit_oauth_request.py
 
 build: test
 
