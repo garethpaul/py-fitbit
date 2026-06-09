@@ -31,6 +31,15 @@ if "write_access_token_string" not in SOURCE or "0600" not in SOURCE:
 if "read_access_token_string" not in SOURCE:
     errors.append("fitbit.py must read access_token.string through a token helper")
 
+if "validate_api_call" not in SOURCE:
+    errors.append("fitbit.py must validate protected Fitbit API paths")
+
+if (
+    "api_call.startswith('//')" not in SOURCE
+    or ("'://' in api_call" not in SOURCE and "\"://\" in api_call" not in SOURCE)
+):
+    errors.append("fitbit.py must reject absolute and scheme-relative API calls")
+
 if errors:
     print("\n".join(errors), file=sys.stderr)
     sys.exit(1)

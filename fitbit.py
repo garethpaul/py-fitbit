@@ -41,6 +41,18 @@ def write_access_token_string(access_token_string, fname=ACCESS_TOKEN_STRING_FNA
       fobj.close()
 
 
+def validate_api_call(api_call):
+   if not isinstance(api_call, basestring):
+      raise ValueError('api_call must be a Fitbit API path')
+
+   api_call = api_call.strip()
+   if (not api_call.startswith('/') or api_call.startswith('//') or
+         '://' in api_call):
+      raise ValueError('api_call must be a Fitbit API path')
+
+   return api_call
+
+
 def fetch_response(oauth_request, connection, debug=DEBUG):
    url= oauth_request.to_url()
    connection.request(oauth_request.http_method,url)
@@ -53,6 +65,7 @@ def fetch_response(oauth_request, connection, debug=DEBUG):
 
 
 def fitbit(api_call):
+   api_call = validate_api_call(api_call)
    connection = httplib.HTTPSConnection(SERVER)
    consumer = oauth.OAuthConsumer(CONSUMER_KEY, CONSUMER_SECRET)
    signature_method = oauth.OAuthSignatureMethod_PLAINTEXT()

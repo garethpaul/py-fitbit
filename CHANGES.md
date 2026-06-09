@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-09
+
+- Added protected resource API path validation so absolute URLs and
+  scheme-relative URLs are rejected before any Fitbit network connection opens.
+
 ## 2026-06-08
 
 - Added mocked coverage for the no-cache OAuth request-token/access-token flow

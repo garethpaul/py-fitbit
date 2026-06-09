@@ -24,6 +24,7 @@ Priority:
 - Avoid printing or committing real access tokens
 - Keep local token-cache files owner-only
 - Keep cached-token and request-token OAuth branches covered by mocks
+- Keep protected resource calls constrained to Fitbit API paths
 - Keep completed maintenance plans under `docs/plans`
 
 Next priorities:

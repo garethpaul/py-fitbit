@@ -178,6 +178,43 @@ class FitbitOAuthRequestTest(unittest.TestCase):
             connection.requests,
         )
 
+    def test_protected_resource_path_is_trimmed(self):
+        token_string = 'oauth_token=cached&oauth_token_secret=secret'
+        with open(fitbit.ACCESS_TOKEN_STRING_FNAME, 'w') as token_file:
+            token_file.write(token_string)
+
+        original_stdout = sys.stdout
+        try:
+            sys.stdout = StringIO.StringIO()
+            data = fitbit.fitbit(' /1/user/-/profile.json ')
+        finally:
+            sys.stdout = original_stdout
+
+        self.assertEqual('{"ok": true}', data)
+        self.assertEqual(1, len(FakeOAuthRequest.created))
+        self.assertEqual('/1/user/-/profile.json', FakeOAuthRequest.created[0].http_url)
+        self.assertEqual(1, len(FakeHTTPSConnection.instances))
+        connection = FakeHTTPSConnection.instances[0]
+        self.assertEqual(
+            [('GET', '/1/user/-/profile.json', {'Authorization': 'OAuth realm=api.fitbit.com'})],
+            connection.requests,
+        )
+
+    def test_rejects_non_api_paths_before_network(self):
+        invalid_api_calls = [
+            '1/user/-/profile.json',
+            'http://example.test/1/user/-/profile.json',
+            '//example.test/1/user/-/profile.json',
+            None,
+        ]
+
+        for api_call in invalid_api_calls:
+            with self.assertRaises(ValueError):
+                fitbit.fitbit(api_call)
+
+        self.assertEqual([], FakeOAuthRequest.created)
+        self.assertEqual([], FakeHTTPSConnection.instances)
+
     def test_access_token_cache_uses_owner_only_permissions(self):
         fitbit.write_access_token_string('oauth_token=cached&oauth_token_secret=secret')
 
