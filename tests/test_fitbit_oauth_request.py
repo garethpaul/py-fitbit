@@ -205,6 +205,8 @@ class FitbitOAuthRequestTest(unittest.TestCase):
             '1/user/-/profile.json',
             'http://example.test/1/user/-/profile.json',
             '//example.test/1/user/-/profile.json',
+            '/1/user/-/profile json',
+            '/1/user/-/profile.json\nHost: example.test',
             None,
         ]
 

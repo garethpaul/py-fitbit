@@ -43,6 +43,9 @@ if (
 ):
     errors.append("fitbit.py must reject absolute and scheme-relative API calls")
 
+if ".isspace()" not in SOURCE:
+    errors.append("fitbit.py must reject whitespace inside protected API paths")
+
 if errors:
     print("\n".join(errors), file=sys.stderr)
     sys.exit(1)

@@ -50,6 +50,9 @@ def validate_api_call(api_call):
          '://' in api_call):
       raise ValueError('api_call must be a Fitbit API path')
 
+   if any(char.isspace() for char in api_call):
+      raise ValueError('api_call must not contain whitespace')
+
    return api_call
 
 

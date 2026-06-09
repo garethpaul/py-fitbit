@@ -6,6 +6,8 @@
   HTTPS and added regression coverage for them.
 - Added protected resource API path validation so absolute URLs and
   scheme-relative URLs are rejected before any Fitbit network connection opens.
+- Added protected resource API path whitespace validation before Fitbit network
+  connections open.
 
 ## 2026-06-08
 
