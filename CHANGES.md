@@ -10,6 +10,8 @@
   connections open.
 - Added protected resource API path fragment validation before Fitbit network
   connections open.
+- Added protected resource API path credential-query validation so OAuth tokens
+  and client secrets are rejected before Fitbit network connections open.
 
 ## 2026-06-08
 

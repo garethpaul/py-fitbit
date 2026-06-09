@@ -1,7 +1,8 @@
 """
 A Python library for accessing the FitBit API.
 """
-import os, httplib 
+import os, httplib
+import urlparse
 from oauth import oauth 
 import json
 import settings
@@ -14,6 +15,14 @@ ACCESS_TOKEN_URL = 'https://%s/oauth/access_token' % SERVER
 AUTHORIZATION_URL = 'https://%s/oauth/authorize' % SERVER
 ACCESS_TOKEN_STRING_FNAME = 'access_token.string'
 DEBUG = False
+CREDENTIAL_QUERY_PARAMETERS = set([
+   'access_token',
+   'client_secret',
+   'consumer_secret',
+   'oauth_signature',
+   'oauth_token',
+   'oauth_verifier',
+])
 
 
 def read_access_token_string(fname=ACCESS_TOKEN_STRING_FNAME):
@@ -55,6 +64,11 @@ def validate_api_call(api_call):
 
    if '#' in api_call:
       raise ValueError('api_call must not contain a fragment')
+
+   for name, _value in urlparse.parse_qsl(
+         urlparse.urlsplit(api_call).query, keep_blank_values=True):
+      if name.lower() in CREDENTIAL_QUERY_PARAMETERS:
+         raise ValueError('api_call must not contain credential query parameters')
 
    return api_call
 
