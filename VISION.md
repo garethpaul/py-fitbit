@@ -10,8 +10,9 @@ The goal is to preserve the learning value while making the legacy protocol,
 Python version, and credential risks explicit.
 
 Current baseline: `make check` verifies Python 2 syntax, repository-local
-credential guardrails, mocked OAuth request and token-cache behavior, and
-completed `docs/plans` coverage without contacting Fitbit.
+credential guardrails, mocked OAuth request and token-cache behavior, the static
+legacy build gate, and completed `docs/plans` coverage without contacting
+Fitbit.
 
 The current focus is:
 
@@ -20,13 +21,15 @@ Priority:
 - Preserve the OAuth request, authorize, and access-token flow
 - Keep consumer keys and secrets in local settings only
 - Treat Python 2 syntax and OAuth 1-era endpoints as legacy
-- Maintain `make check` for Python 2 syntax and credential-safety checks
+- Maintain `make check` and `make build` for Python 2 syntax and
+  credential-safety checks
 - Avoid printing or committing real access tokens
 - Keep local token-cache files owner-only
 - Keep cached-token and request-token OAuth branches covered by mocks
 - Keep protected resource calls constrained to Fitbit API paths
 - Reject raw whitespace inside protected resource API paths
 - Reject URL fragments inside protected resource API paths
+- Reject dot segments inside protected resource API paths
 - Reject credential query parameters inside protected resource API paths
 - Keep OAuth endpoints pinned to HTTPS
 - Keep completed maintenance plans under `docs/plans`

@@ -236,6 +236,8 @@ class FitbitOAuthRequestTest(unittest.TestCase):
             '/1/user/-/profile.json?oauth_token=secret',
             '/1/user/-/profile.json?access_token=secret',
             '/1/user/-/profile.json?client_secret=secret',
+            '/1/user/-/../profile.json',
+            '/1/user/-/./profile.json',
             None,
         ]
 

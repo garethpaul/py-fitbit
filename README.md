@@ -58,6 +58,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Protected-resource paths are trimmed at the edges but must not contain raw
   whitespace or control characters.
 - Protected-resource paths must not include URL fragments.
+- Protected-resource paths must not include `.` or `..` path segments.
 - Protected-resource paths must not include credential query parameters such as
   `oauth_token`, `access_token`, or `client_secret`; OAuth credentials belong
   in the signed request header or local settings.
@@ -67,6 +68,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Testing and Verification
 
 - Run `make check` before committing changes.
+- Run `make build` for the static legacy verification gate; it uses the same
+  mocked Python 2 tests as `make test`.
 - `make check` delegates to `make verify`, which compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, runs mocked OAuth request, request-token flow, API path validation, and token-cache tests without contacting Fitbit, and verifies completed plans under `docs/plans`.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -84,6 +87,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   requests are opened.
 - Protected Fitbit resource paths reject fragments before network requests are
   opened.
+- Protected Fitbit resource paths reject `.` and `..` path segments before
+  network requests are opened.
 - Protected Fitbit resource paths reject credential query parameters before
   network requests are opened.
 
@@ -103,6 +108,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   protected resource path whitespace guard.
 - See `docs/plans/2026-06-09-api-call-fragment-validation.md` for the
   protected resource path fragment guard.
+- See `docs/plans/2026-06-09-api-call-dot-segment-validation.md` for the
+  protected resource path dot-segment guard and static `make build` alias.
 - See `docs/plans/2026-06-09-api-call-credential-query-validation.md` for the
   protected resource path credential-query guard.
 - See `docs/plans/2026-06-09-oauth-endpoint-https.md` for the OAuth endpoint

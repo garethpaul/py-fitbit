@@ -4,6 +4,9 @@
 
 - Switched OAuth request, access-token, and authorization endpoint constants to
   HTTPS and added regression coverage for them.
+- Added protected resource API path dot-segment validation before Fitbit
+  network connections open.
+- Added a static `make build` gate for the legacy mocked verification flow.
 - Added protected resource API path validation so absolute URLs and
   scheme-relative URLs are rejected before any Fitbit network connection opens.
 - Added protected resource API path whitespace validation before Fitbit network

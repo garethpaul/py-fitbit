@@ -49,6 +49,9 @@ if ".isspace()" not in SOURCE:
 if "'#' in api_call" not in SOURCE and '"#" in api_call' not in SOURCE:
     errors.append("fitbit.py must reject fragments inside protected API paths")
 
+if "path_segments" not in SOURCE or "'.', '..'" not in SOURCE:
+    errors.append("fitbit.py must reject dot segments inside protected API paths")
+
 if "CREDENTIAL_QUERY_PARAMETERS" not in SOURCE or "urlparse.parse_qsl" not in SOURCE:
     errors.append("fitbit.py must reject credential query parameters inside protected API paths")
 

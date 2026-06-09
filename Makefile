@@ -1,4 +1,4 @@
-.PHONY: check docs lint test verify
+.PHONY: check build docs lint test verify
 
 docs:
 	@for plan in docs/plans/*.md; do \
@@ -14,6 +14,8 @@ lint:
 test:
 	python2 tests/test_fitbit_oauth_request.py
 
-verify: lint test docs
+build: test
+
+verify: lint test build docs
 
 check: verify

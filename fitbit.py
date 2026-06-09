@@ -65,6 +65,10 @@ def validate_api_call(api_call):
    if '#' in api_call:
       raise ValueError('api_call must not contain a fragment')
 
+   path_segments = urlparse.urlsplit(api_call).path.split('/')
+   if any(segment in ('.', '..') for segment in path_segments):
+      raise ValueError('api_call must not contain dot segments')
+
    for name, _value in urlparse.parse_qsl(
          urlparse.urlsplit(api_call).query, keep_blank_values=True):
       if name.lower() in CREDENTIAL_QUERY_PARAMETERS:
