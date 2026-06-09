@@ -5,9 +5,10 @@ Status: Completed
 ## Context
 
 Protected Fitbit resource paths were constrained to relative API paths, but
-paths containing `.` or `..` segments were still accepted. Those paths can be
-normalized differently by clients, proxies, or servers, making the requested
-resource less explicit than the caller-provided string suggests.
+paths containing raw or percent-encoded `.` or `..` segments were still
+accepted. Those paths can be normalized differently by clients, proxies, or
+servers, making the requested resource less explicit than the caller-provided
+string suggests.
 
 ## Objectives
 
