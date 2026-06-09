@@ -270,6 +270,11 @@ class FitbitOAuthRequestTest(unittest.TestCase):
             ('GET', '/1/user/-/profile.json', {'Authorization': 'OAuth realm=api.fitbit.com'}),
         ], connection.requests)
 
+    def test_oauth_endpoints_use_https(self):
+        self.assertEqual('https://api.fitbit.com/oauth/request_token', fitbit.REQUEST_TOKEN_URL)
+        self.assertEqual('https://api.fitbit.com/oauth/access_token', fitbit.ACCESS_TOKEN_URL)
+        self.assertEqual('https://api.fitbit.com/oauth/authorize', fitbit.AUTHORIZATION_URL)
+
 
 if __name__ == '__main__':
     unittest.main()

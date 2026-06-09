@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Switched OAuth request, access-token, and authorization endpoint constants to
+  HTTPS and added regression coverage for them.
 - Added protected resource API path validation so absolute URLs and
   scheme-relative URLs are rejected before any Fitbit network connection opens.
 

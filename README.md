@@ -50,6 +50,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 - Create a local, untracked `settings.py` with `CONSUMER_KEY` and `CONSUMER_SECRET`.
 - Run `fitbit.py` with Python 2.7 if you need to exercise the legacy OAuth 1 flow.
+- OAuth request, access-token, and authorization endpoints are pinned to
+  `https://api.fitbit.com`.
 - Pass protected-resource calls as Fitbit API paths such as
   `/1/user/-/profile.json`; absolute URLs and scheme-relative URLs are rejected
   before a network connection is opened.
@@ -85,6 +87,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   no-cache OAuth flow baseline.
 - See `docs/plans/2026-06-09-api-call-path-validation.md` for the protected
   resource API path guard.
+- See `docs/plans/2026-06-09-oauth-endpoint-https.md` for the OAuth endpoint
+  HTTPS guard.
 
 ## Contributing
 

@@ -9,9 +9,9 @@ import settings
 CONSUMER_KEY    = settings.CONSUMER_KEY
 CONSUMER_SECRET = settings.CONSUMER_SECRET
 SERVER = 'api.fitbit.com'
-REQUEST_TOKEN_URL = 'http://%s/oauth/request_token' % SERVER
-ACCESS_TOKEN_URL = 'http://%s/oauth/access_token' % SERVER
-AUTHORIZATION_URL = 'http://%s/oauth/authorize' % SERVER
+REQUEST_TOKEN_URL = 'https://%s/oauth/request_token' % SERVER
+ACCESS_TOKEN_URL = 'https://%s/oauth/access_token' % SERVER
+AUTHORIZATION_URL = 'https://%s/oauth/authorize' % SERVER
 ACCESS_TOKEN_STRING_FNAME = 'access_token.string'
 DEBUG = False
 

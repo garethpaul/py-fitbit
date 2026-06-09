@@ -34,6 +34,9 @@ if "read_access_token_string" not in SOURCE:
 if "validate_api_call" not in SOURCE:
     errors.append("fitbit.py must validate protected Fitbit API paths")
 
+if "http://%s/oauth" in SOURCE:
+    errors.append("fitbit.py must use HTTPS for OAuth endpoints")
+
 if (
     "api_call.startswith('//')" not in SOURCE
     or ("'://' in api_call" not in SOURCE and "\"://\" in api_call" not in SOURCE)
