@@ -29,7 +29,8 @@ Priority:
 - Keep protected resource calls constrained to Fitbit API paths
 - Reject raw whitespace inside protected resource API paths
 - Reject URL fragments inside protected resource API paths
-- Reject dot segments inside protected resource API paths
+- Reject raw and percent-encoded dot segments inside protected resource API
+  paths
 - Reject credential query parameters inside protected resource API paths
 - Keep OAuth endpoints pinned to HTTPS
 - Keep completed maintenance plans under `docs/plans`

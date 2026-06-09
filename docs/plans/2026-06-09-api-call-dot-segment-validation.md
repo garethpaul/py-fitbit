@@ -11,8 +11,8 @@ resource less explicit than the caller-provided string suggests.
 
 ## Objectives
 
-- Reject `.` and `..` segments in protected Fitbit API paths before any network
-  connection opens.
+- Reject raw and percent-encoded `.` and `..` segments in protected Fitbit API
+  paths before any network connection opens.
 - Cover the behavior with the existing Python 2 mocked OAuth request test.
 - Extend the Python 3 static checker so the validation remains visible.
 - Add a static `make build` alias for the legacy verification gate.
@@ -20,10 +20,10 @@ resource less explicit than the caller-provided string suggests.
 
 ## Work Completed
 
-- Updated `validate_api_call` to reject dot segments after trimming and before
-  OAuth request creation.
-- Added mocked invalid-path cases for `/../` and `/./` protected resource
-  paths.
+- Updated `validate_api_call` to reject decoded dot segments after trimming and
+  before OAuth request creation.
+- Added mocked invalid-path cases for raw and percent-encoded `/../` and `/./`
+  protected resource paths.
 - Extended `scripts/check_legacy_fitbit.py` to require the dot-segment guard.
 - Added `make build` as a static test alias and routed `verify` through lint,
   test, build, and docs.

@@ -58,7 +58,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Protected-resource paths are trimmed at the edges but must not contain raw
   whitespace or control characters.
 - Protected-resource paths must not include URL fragments.
-- Protected-resource paths must not include `.` or `..` path segments.
+- Protected-resource paths must not include raw or percent-encoded `.` or `..`
+  path segments.
 - Protected-resource paths must not include credential query parameters such as
   `oauth_token`, `access_token`, or `client_secret`; OAuth credentials belong
   in the signed request header or local settings.
@@ -87,8 +88,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   requests are opened.
 - Protected Fitbit resource paths reject fragments before network requests are
   opened.
-- Protected Fitbit resource paths reject `.` and `..` path segments before
-  network requests are opened.
+- Protected Fitbit resource paths reject raw and percent-encoded `.` and `..`
+  path segments before network requests are opened.
 - Protected Fitbit resource paths reject credential query parameters before
   network requests are opened.
 
