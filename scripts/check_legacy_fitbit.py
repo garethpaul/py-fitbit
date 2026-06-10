@@ -8,6 +8,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = (ROOT / "fitbit.py").read_text()
+MAKEFILE = (ROOT / "Makefile").read_text()
+CI_PLAN = ROOT / "docs" / "plans" / "2026-06-10-hosted-legacy-validation.md"
+CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
 GITIGNORE_LINES = {
     line.strip()
     for line in (ROOT / ".gitignore").read_text().splitlines()
@@ -15,6 +18,35 @@ GITIGNORE_LINES = {
 }
 
 errors = []
+
+if not CI_PLAN.exists():
+    errors.append("docs/plans/2026-06-10-hosted-legacy-validation.md is missing")
+else:
+    plan = CI_PLAN.read_text()
+    if "Status: Completed" not in plan or "make check" not in plan:
+        errors.append("hosted legacy validation plan must be completed and record make check")
+
+if not CI_WORKFLOW.exists():
+    errors.append(".github/workflows/check.yml is missing")
+else:
+    workflow = CI_WORKFLOW.read_text()
+    required_fragments = [
+        "runs-on: ubuntu-24.04",
+        "permissions:\n  contents: read",
+        "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+        "python:2.7.18@sha256:c934af72b8bd03b9804d5bde2569c320926e70392d708d113a2e71bcf98c8a20",
+        "run: make check",
+    ]
+    for fragment in required_fragments:
+        if fragment not in workflow:
+            errors.append("CI workflow must include %s" % fragment)
+    if "setup-python@" in workflow:
+        errors.append("CI workflow must use the pinned Python 2 container, not setup-python")
+    if "continue-on-error" in workflow:
+        errors.append("CI workflow must not allow legacy verification failures")
+
+if "command -v python2" in MAKEFILE or "Skipping legacy Python 2" in MAKEFILE:
+    errors.append("Makefile must require Python 2 checks instead of skipping them")
 
 if "access_token.string" not in GITIGNORE_LINES:
     errors.append(".gitignore must ignore access_token.string")

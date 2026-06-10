@@ -12,6 +12,7 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 ## Repository Contents
 
 - `README.md` - project overview and local usage notes
+- `.github/workflows/check.yml` - pinned Python 2.7 hosted verification
 - `CHANGES.md` - notable maintenance changes
 - `Makefile` - local verification entry points
 - `docs/plans` - canonical completed maintenance plans
@@ -75,6 +76,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - `make check` delegates to `make verify`, which compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, runs mocked OAuth request, request-token flow, API path validation, and token-cache tests without contacting Fitbit, and verifies completed plans under `docs/plans`.
 - The test target disables Python bytecode writes, and the legacy safety check
   rejects checked-out `.pyc` files or `__pycache__` directories.
+- GitHub Actions runs the complete gate in the official Python 2.7.18 image,
+  pinned by digest, with read-only repository permissions. The job does not
+  skip Python 2 compilation or the eight mocked OAuth tests.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -125,6 +129,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   bytecode-free legacy verification guard.
 - See `docs/plans/2026-06-10-token-cache-read-permissions.md` for the
   token-cache read permission guard.
+- See `docs/plans/2026-06-10-hosted-legacy-validation.md` for digest-pinned,
+  full Python 2.7 hosted verification.
 
 ## Contributing
 

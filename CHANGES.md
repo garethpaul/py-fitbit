@@ -2,6 +2,10 @@
 
 ## 2026-06-10
 
+- Added read-only hosted verification in a digest-pinned Python 2.7.18
+  container without skipping legacy tests.
+- Extended the safety checker to preserve the container, checkout, and
+  full-gate workflow contract.
 - Added a cached access-token read guard that rejects `access_token.string`
   files with group or other permissions before opening a Fitbit request.
 

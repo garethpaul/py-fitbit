@@ -41,6 +41,10 @@ Existing `access_token.string` cache files must be owner-only. Files with group
 or other permissions are rejected before the cached-token branch opens a Fitbit
 network connection.
 
+Hosted verification runs the full mocked OAuth gate in a digest-pinned Python
+2.7.18 container with read-only repository permissions. It does not contact
+Fitbit or allow legacy test failures.
+
 ## Dependency and Supply Chain Security
 
 Dependency updates should come from trusted package managers and should keep lockfiles in sync when lockfiles exist. Do not commit credentials, private keys, tokens, generated secrets, or machine-local configuration. If a vulnerability depends on a compromised package, typosquatting risk, insecure transitive dependency, or unsafe build step, include the package name, affected version, and the path through which it is used.
