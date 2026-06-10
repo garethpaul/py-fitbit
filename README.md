@@ -67,6 +67,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - `access_token.string` is a local token cache, must stay untracked, and is
   written with owner-only permissions. Existing token-cache files with group or
   other permissions are rejected before a Fitbit network request is opened.
+- OAuth token exchanges and protected resource calls reject non-2xx HTTP
+  responses without including the upstream response body in the exception.
 
 ## Testing and Verification
 
@@ -78,7 +80,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   rejects checked-out `.pyc` files or `__pycache__` directories.
 - GitHub Actions runs the complete gate in the official Python 2.7.18 image,
   pinned by digest, with read-only repository permissions. The job does not
-  skip Python 2 compilation or the eight mocked OAuth tests.
+  skip Python 2 compilation or the ten mocked OAuth tests.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -131,6 +133,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   token-cache read permission guard.
 - See `docs/plans/2026-06-10-hosted-legacy-validation.md` for digest-pinned,
   full Python 2.7 hosted verification.
+- See `docs/plans/2026-06-10-http-status-validation.md` for OAuth and protected
+  resource response status validation.
 
 ## Contributing
 

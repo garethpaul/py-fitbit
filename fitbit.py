@@ -85,11 +85,19 @@ def fetch_response(oauth_request, connection, debug=DEBUG):
    url= oauth_request.to_url()
    connection.request(oauth_request.http_method,url)
    response = connection.getresponse()
-   s=response.read()
+   s=read_success_response(response, 'OAuth request')
    if debug:
       print 'requested URL: %s' % url
       print 'server response: %s' % s
    return s
+
+
+def read_success_response(response, operation):
+   body = response.read()
+   status = getattr(response, 'status', None)
+   if status is None or status < 200 or status >= 300:
+      raise IOError('Fitbit %s failed with HTTP status %s' % (operation, status))
+   return body
 
 
 def fitbit(api_call):
@@ -159,7 +167,7 @@ def fitbit(api_call):
    headers = oauth_request.to_header(realm='api.fitbit.com')
    connection.request('GET', api_call, headers=headers)
    resp = connection.getresponse()
-   data = resp.read()
+   data = read_success_response(resp, 'protected resource request')
    return data
 
 if __name__ == '__main__':

@@ -8,6 +8,8 @@
   full-gate workflow contract.
 - Added a cached access-token read guard that rejects `access_token.string`
   files with group or other permissions before opening a Fitbit request.
+- Added HTTP status validation for OAuth token exchanges and protected resource
+  calls without exposing failed response bodies in errors.
 
 ## 2026-06-09
 

@@ -114,6 +114,12 @@ if "path_segments" not in SOURCE or "'.', '..'" not in SOURCE or "urlparse.unquo
 if "CREDENTIAL_QUERY_PARAMETERS" not in SOURCE or "urlparse.parse_qsl" not in SOURCE:
     errors.append("fitbit.py must reject credential query parameters inside protected API paths")
 
+if "read_success_response" not in SOURCE or "status < 200" not in SOURCE or "status >= 300" not in SOURCE:
+    errors.append("fitbit.py must reject non-2xx Fitbit HTTP responses")
+
+if "read_success_response(resp, 'protected resource request')" not in SOURCE:
+    errors.append("protected Fitbit resource calls must enforce HTTP status checks")
+
 if errors:
     print("\n".join(errors), file=sys.stderr)
     sys.exit(1)

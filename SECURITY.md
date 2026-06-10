@@ -40,6 +40,9 @@ Protected Fitbit resource calls should be passed as API paths such as `/1/user/-
 Existing `access_token.string` cache files must be owner-only. Files with group
 or other permissions are rejected before the cached-token branch opens a Fitbit
 network connection.
+OAuth token and protected resource responses must use a 2xx HTTP status. Error
+responses are rejected without copying their bodies into exception messages,
+where credential or health-data details could otherwise leak into logs.
 
 Hosted verification runs the full mocked OAuth gate in a digest-pinned Python
 2.7.18 container with read-only repository permissions. It does not contact
