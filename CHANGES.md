@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-10
+
+- Added a cached access-token read guard that rejects `access_token.string`
+  files with group or other permissions before opening a Fitbit request.
+
 ## 2026-06-09
 
 - Added bytecode-free verification coverage for the legacy Python 2 tests.

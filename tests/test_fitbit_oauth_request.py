@@ -148,8 +148,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
 
     def test_cached_access_token_signs_protected_resource_request(self):
         token_string = 'oauth_token=cached&oauth_token_secret=secret'
-        with open(fitbit.ACCESS_TOKEN_STRING_FNAME, 'w') as token_file:
-            token_file.write(token_string)
+        fitbit.write_access_token_string(token_string)
 
         original_stdout = sys.stdout
         try:
@@ -181,8 +180,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
 
     def test_protected_resource_path_is_trimmed(self):
         token_string = 'oauth_token=cached&oauth_token_secret=secret'
-        with open(fitbit.ACCESS_TOKEN_STRING_FNAME, 'w') as token_file:
-            token_file.write(token_string)
+        fitbit.write_access_token_string(token_string)
 
         original_stdout = sys.stdout
         try:
@@ -203,8 +201,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
 
     def test_protected_resource_path_preserves_non_secret_query(self):
         token_string = 'oauth_token=cached&oauth_token_secret=secret'
-        with open(fitbit.ACCESS_TOKEN_STRING_FNAME, 'w') as token_file:
-            token_file.write(token_string)
+        fitbit.write_access_token_string(token_string)
 
         original_stdout = sys.stdout
         try:
@@ -260,6 +257,23 @@ class FitbitOAuthRequestTest(unittest.TestCase):
             'oauth_token=cached&oauth_token_secret=secret',
             fitbit.read_access_token_string(),
         )
+
+    def test_rejects_readable_access_token_cache_before_network(self):
+        token_string = 'oauth_token=cached&oauth_token_secret=secret'
+        with open(fitbit.ACCESS_TOKEN_STRING_FNAME, 'w') as token_file:
+            token_file.write(token_string)
+        os.chmod(fitbit.ACCESS_TOKEN_STRING_FNAME, 0644)
+
+        original_stdout = sys.stdout
+        try:
+            sys.stdout = StringIO.StringIO()
+            with self.assertRaises(ValueError):
+                fitbit.fitbit('/1/user/-/profile.json')
+        finally:
+            sys.stdout = original_stdout
+
+        self.assertEqual([], FakeOAuthRequest.created)
+        self.assertEqual([], FakeHTTPSConnection.instances)
 
     def test_request_token_flow_writes_owner_only_access_token_cache(self):
         request_token = 'oauth_token=request-key&oauth_token_secret=request-secret'

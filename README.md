@@ -64,7 +64,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   `oauth_token`, `access_token`, or `client_secret`; OAuth credentials belong
   in the signed request header or local settings.
 - `access_token.string` is a local token cache, must stay untracked, and is
-  written with owner-only permissions.
+  written with owner-only permissions. Existing token-cache files with group or
+  other permissions are rejected before a Fitbit network request is opened.
 
 ## Testing and Verification
 
@@ -94,6 +95,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   path segments before network requests are opened.
 - Protected Fitbit resource paths reject credential query parameters before
   network requests are opened.
+- Existing `access_token.string` files must be owner-only; readable-by-group or
+  readable-by-other cache files are rejected before network requests are
+  opened.
 
 ## Maintenance Notes
 
@@ -119,6 +123,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   HTTPS guard.
 - See `docs/plans/2026-06-09-bytecode-free-verification.md` for the
   bytecode-free legacy verification guard.
+- See `docs/plans/2026-06-10-token-cache-read-permissions.md` for the
+  token-cache read permission guard.
 
 ## Contributing
 

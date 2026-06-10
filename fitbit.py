@@ -1,7 +1,7 @@
 """
 A Python library for accessing the FitBit API.
 """
-import os, httplib
+import os, httplib, stat
 import urlparse
 from oauth import oauth 
 import json
@@ -26,6 +26,10 @@ CREDENTIAL_QUERY_PARAMETERS = set([
 
 
 def read_access_token_string(fname=ACCESS_TOKEN_STRING_FNAME):
+   mode = stat.S_IMODE(os.stat(fname).st_mode)
+   if mode & (stat.S_IRWXG | stat.S_IRWXO):
+      raise ValueError('access token cache must be owner-only')
+
    fobj = open(fname)
    try:
       return fobj.read()
@@ -90,12 +94,12 @@ def fetch_response(oauth_request, connection, debug=DEBUG):
 
 def fitbit(api_call):
    api_call = validate_api_call(api_call)
-   connection = httplib.HTTPSConnection(SERVER)
    consumer = oauth.OAuthConsumer(CONSUMER_KEY, CONSUMER_SECRET)
    signature_method = oauth.OAuthSignatureMethod_PLAINTEXT()
 
    # if local does not exist
    if not os.path.exists(ACCESS_TOKEN_STRING_FNAME):
+      connection = httplib.HTTPSConnection(SERVER)
       # obtain token to get request
       print '* Obtain a request token ...'
       oauth_request = oauth.OAuthRequest.from_consumer_and_token(
@@ -145,6 +149,7 @@ def fitbit(api_call):
       access_token_string = read_access_token_string()
 
       access_token = oauth.OAuthToken.from_string(access_token_string)
+      connection = httplib.HTTPSConnection(SERVER)
 
    # access protected resource
    print '* Access a protected resource ...'

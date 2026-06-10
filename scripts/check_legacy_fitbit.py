@@ -51,6 +51,13 @@ if "write_access_token_string" not in SOURCE or "0600" not in SOURCE:
 if "read_access_token_string" not in SOURCE:
     errors.append("fitbit.py must read access_token.string through a token helper")
 
+if (
+    "stat.S_IMODE" not in SOURCE
+    or "stat.S_IRWXG" not in SOURCE
+    or "stat.S_IRWXO" not in SOURCE
+):
+    errors.append("fitbit.py must reject access_token.string with group or other permissions")
+
 if "validate_api_call" not in SOURCE:
     errors.append("fitbit.py must validate protected Fitbit API paths")
 
