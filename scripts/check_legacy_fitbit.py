@@ -15,6 +15,7 @@ CI_PLANS = [
     ROOT / "docs" / "plans" / "2026-06-10-ci-baseline.md",
     ROOT / "docs" / "plans" / "2026-06-10-hosted-legacy-validation.md",
     ROOT / "docs" / "plans" / "2026-06-12-response-body-size-boundary.md",
+    ROOT / "docs" / "plans" / "2026-06-12-credential-safe-output.md",
 ]
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
 CODEOWNERS = ROOT / ".github" / "CODEOWNERS"
@@ -106,6 +107,29 @@ if bytecode_files or bytecode_dirs:
 if re.search(r"^DEBUG\s*=\s*True\b", SOURCE, flags=re.MULTILINE):
     errors.append("fitbit.py must not enable DEBUG by default")
 
+for forbidden_output in [
+    "print 'Auth key:",
+    "print 'Auth secret:",
+    "print 'Access key:",
+    "print 'Access secret:",
+    "print 'requested URL:",
+    "print 'server response:",
+    "set_debuglevel(",
+]:
+    if forbidden_output in SOURCE:
+        errors.append("fitbit.py must not print OAuth credentials or raw exchanges: %s" % forbidden_output)
+
+for safe_debug_output in [
+    "OAuth request method: %s",
+    "OAuth response status: %s",
+    "OAuth response bytes: %s",
+]:
+    if safe_debug_output not in SOURCE:
+        errors.append("fitbit.py must preserve credential-safe debug metadata: %s" % safe_debug_output)
+
+if SOURCE.count("fetch_response(oauth_request, connection, debug=DEBUG)") != 3:
+    errors.append("both OAuth exchanges must explicitly use credential-safe debug output")
+
 if "CONSUMER_SECRET" not in SOURCE or "settings.CONSUMER_SECRET" not in SOURCE:
     errors.append("fitbit.py must load the consumer secret from local settings")
 
@@ -169,10 +193,31 @@ for test_contract in [
     if test_contract not in TEST_SOURCE:
         errors.append("legacy tests must preserve %s" % test_contract)
 
+for output_test_contract in [
+    "test_debug_output_omits_signed_url_and_response_body",
+    "test_debug_mode_does_not_enable_transport_trace_or_log_secrets",
+    "request-secret-must-not-be-logged",
+    "access-secret-must-not-be-logged",
+    "signed-url-secret-must-not-be-logged",
+    "response-secret-must-not-be-logged",
+    "self.assertEqual([], FakeHTTPSConnection.instances[0].debug_levels)",
+    "console_output.count('OAuth request method: GET')",
+    "console_output.count('OAuth response status: 200')",
+    "self.assertNotIn(oauth_request.http_url, console_output)",
+    "self.assertNotIn(response, console_output)",
+]:
+    if output_test_contract not in TEST_SOURCE:
+        errors.append("legacy tests must preserve credential-safe output contract %s" % output_test_contract)
+
 for document_name in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
     document = (ROOT / document_name).read_text()
     if "bounded response reads" not in document:
         errors.append("%s must document bounded response reads" % document_name)
+
+for document_name in ["README.md", "SECURITY.md", "CHANGES.md"]:
+    document = (ROOT / document_name).read_text().lower()
+    if not re.search(r"debug\s+output", document) or "token" not in document:
+        errors.append("%s must document credential-safe OAuth output" % document_name)
 
 if errors:
     print("\n".join(errors), file=sys.stderr)

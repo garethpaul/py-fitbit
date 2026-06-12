@@ -4,6 +4,8 @@
 
 - Added 1 MiB bounded response reads for OAuth token exchanges and protected
   resources, with exact Python 2 read-limit and oversized-payload regressions.
+- Stopped printing OAuth token credentials and limited optional debug output to
+  non-secret request and response metadata.
 
 ## 2026-06-10
 
