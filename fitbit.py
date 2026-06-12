@@ -15,6 +15,7 @@ ACCESS_TOKEN_URL = 'https://%s/oauth/access_token' % SERVER
 AUTHORIZATION_URL = 'https://%s/oauth/authorize' % SERVER
 ACCESS_TOKEN_STRING_FNAME = 'access_token.string'
 DEBUG = False
+MAX_RESPONSE_BODY_BYTES = 1 << 20
 CREDENTIAL_QUERY_PARAMETERS = set([
    'access_token',
    'client_secret',
@@ -93,10 +94,14 @@ def fetch_response(oauth_request, connection, debug=DEBUG):
 
 
 def read_success_response(response, operation):
-   body = response.read()
+   body = response.read(MAX_RESPONSE_BODY_BYTES + 1)
    status = getattr(response, 'status', None)
    if status is None or status < 200 or status >= 300:
       raise IOError('Fitbit %s failed with HTTP status %s' % (operation, status))
+   if len(body) > MAX_RESPONSE_BODY_BYTES:
+      raise IOError(
+         'Fitbit %s response exceeds %s bytes' %
+         (operation, MAX_RESPONSE_BODY_BYTES))
    return body
 
 

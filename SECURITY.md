@@ -30,6 +30,8 @@ Helpful reports include:
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
 - Review found secret-like configuration names that require careful review before use; changes in those areas should receive security-focused review before merge.
 - No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
+- GitHub Actions runs the full mocked `make check` baseline in a pinned Python
+  2 container without persisted checkout credentials.
 
 ## Service and API Notes
 
@@ -43,6 +45,8 @@ network connection.
 OAuth token and protected resource responses must use a 2xx HTTP status. Error
 responses are rejected without copying their bodies into exception messages,
 where credential or health-data details could otherwise leak into logs.
+Both paths use bounded response reads of 1 MiB plus one detection byte so a bad
+endpoint cannot force an unbounded credential or health-data allocation.
 
 Hosted verification runs the full mocked OAuth gate in a digest-pinned Python
 2.7.18 container with read-only repository permissions. It does not contact

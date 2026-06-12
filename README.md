@@ -69,18 +69,22 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   other permissions are rejected before a Fitbit network request is opened.
 - OAuth token exchanges and protected resource calls reject non-2xx HTTP
   responses without including the upstream response body in the exception.
+- OAuth and protected-resource paths use bounded response reads of 1 MiB plus
+  one detection byte and reject oversized credential or health-data payloads.
 
 ## Testing and Verification
 
 - Run `make check` before committing changes.
 - Run `make build` for the static legacy verification gate; it uses the same
   mocked Python 2 tests as `make test`.
+- GitHub Actions runs the complete `make check` gate in a digest-pinned Python
+  2.7.18 container for every push and pull request.
 - `make check` delegates to `make verify`, which compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, runs mocked OAuth request, request-token flow, API path validation, and token-cache tests without contacting Fitbit, and verifies completed plans under `docs/plans`.
 - The test target disables Python bytecode writes, and the legacy safety check
   rejects checked-out `.pyc` files or `__pycache__` directories.
 - GitHub Actions runs the complete gate in the official Python 2.7.18 image,
   pinned by digest, with read-only repository permissions. The job does not
-  skip Python 2 compilation or the ten mocked OAuth tests.
+  skip Python 2 compilation or the thirteen mocked OAuth tests.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -129,12 +133,16 @@ When the required SDK or runtime is unavailable, use static checks and source re
   HTTPS guard.
 - See `docs/plans/2026-06-09-bytecode-free-verification.md` for the
   bytecode-free legacy verification guard.
+- See `docs/plans/2026-06-10-ci-baseline.md` for the pinned full Python 2
+  GitHub Actions baseline.
 - See `docs/plans/2026-06-10-token-cache-read-permissions.md` for the
   token-cache read permission guard.
 - See `docs/plans/2026-06-10-hosted-legacy-validation.md` for digest-pinned,
   full Python 2.7 hosted verification.
 - See `docs/plans/2026-06-10-http-status-validation.md` for OAuth and protected
   resource response status validation.
+- See `docs/plans/2026-06-12-response-body-size-boundary.md` for bounded
+  response reads across OAuth and protected-resource requests.
 
 ## Contributing
 

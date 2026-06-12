@@ -14,7 +14,7 @@ would make a green workflow misleading.
 - Added GitHub Actions validation in the official Python 2.7.18 image, pinned
   to the reviewed Linux amd64 digest.
 - Kept the complete `make check` path, including Python 2 compilation, all
-  eight mocked OAuth tests, Python 3 safety checks, bytecode guards, and plan
+  ten mocked OAuth tests, Python 3 safety checks, bytecode guards, and plan
   validation.
 - Limited the workflow token to read-only contents access and pinned checkout
   to a reviewed commit.

@@ -8,9 +8,16 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = (ROOT / "fitbit.py").read_text()
+TEST_SOURCE = (ROOT / "tests" / "test_fitbit_oauth_request.py").read_text()
+README = (ROOT / "README.md").read_text()
 MAKEFILE = (ROOT / "Makefile").read_text()
-CI_PLAN = ROOT / "docs" / "plans" / "2026-06-10-hosted-legacy-validation.md"
+CI_PLANS = [
+    ROOT / "docs" / "plans" / "2026-06-10-ci-baseline.md",
+    ROOT / "docs" / "plans" / "2026-06-10-hosted-legacy-validation.md",
+    ROOT / "docs" / "plans" / "2026-06-12-response-body-size-boundary.md",
+]
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
+CODEOWNERS = ROOT / ".github" / "CODEOWNERS"
 GITIGNORE_LINES = {
     line.strip()
     for line in (ROOT / ".gitignore").read_text().splitlines()
@@ -19,12 +26,16 @@ GITIGNORE_LINES = {
 
 errors = []
 
-if not CI_PLAN.exists():
-    errors.append("docs/plans/2026-06-10-hosted-legacy-validation.md is missing")
-else:
-    plan = CI_PLAN.read_text()
+if "access_token.string" not in GITIGNORE_LINES:
+    errors.append(".gitignore must ignore access_token.string")
+
+for ci_plan in CI_PLANS:
+    if not ci_plan.exists():
+        errors.append("%s is missing" % ci_plan.relative_to(ROOT))
+        continue
+    plan = ci_plan.read_text()
     if "Status: Completed" not in plan or "make check" not in plan:
-        errors.append("hosted legacy validation plan must be completed and record make check")
+        errors.append("%s must be completed and record make check" % ci_plan.relative_to(ROOT))
 
 if not CI_WORKFLOW.exists():
     errors.append(".github/workflows/check.yml is missing")
@@ -32,24 +43,45 @@ else:
     workflow = CI_WORKFLOW.read_text()
     required_fragments = [
         "runs-on: ubuntu-24.04",
+        "workflow_dispatch:",
         "permissions:\n  contents: read",
         "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+        "persist-credentials: false",
         "python:2.7.18@sha256:c934af72b8bd03b9804d5bde2569c320926e70392d708d113a2e71bcf98c8a20",
         "run: make check",
     ]
     for fragment in required_fragments:
         if fragment not in workflow:
             errors.append("CI workflow must include %s" % fragment)
+    if workflow.count("actions/checkout@") != 1:
+        errors.append("CI workflow must use exactly one checkout action")
+    if workflow.count("persist-credentials:") != 1:
+        errors.append("CI workflow must set checkout credential persistence exactly once")
+    if workflow.count("permissions:") != 1 or re.search(r"^\s+[\w-]+:\s+write\s*$", workflow, re.MULTILINE):
+        errors.append("CI workflow must keep one read-only permissions block")
     if "setup-python@" in workflow:
         errors.append("CI workflow must use the pinned Python 2 container, not setup-python")
     if "continue-on-error" in workflow:
         errors.append("CI workflow must not allow legacy verification failures")
+    if "branches:" in workflow:
+        errors.append("CI workflow must validate pushes on every branch")
+
+workflow_files = sorted(
+    str(path.relative_to(ROOT))
+    for path in (ROOT / ".github" / "workflows").rglob("*")
+    if path.is_file()
+)
+if workflow_files != [".github/workflows/check.yml"]:
+    errors.append("check.yml must be the repository's only hosted workflow")
+
+if not CODEOWNERS.exists() or CODEOWNERS.read_text().strip() != "* @garethpaul":
+    errors.append("CODEOWNERS must assign the repository to @garethpaul")
+
+if "GitHub Actions" not in README:
+    errors.append("README must document the GitHub Actions check")
 
 if "command -v python2" in MAKEFILE or "Skipping legacy Python 2" in MAKEFILE:
     errors.append("Makefile must require Python 2 checks instead of skipping them")
-
-if "access_token.string" not in GITIGNORE_LINES:
-    errors.append(".gitignore must ignore access_token.string")
 
 if "__pycache__/" not in GITIGNORE_LINES:
     errors.append(".gitignore must ignore __pycache__/")
@@ -119,6 +151,28 @@ if "read_success_response" not in SOURCE or "status < 200" not in SOURCE or "sta
 
 if "read_success_response(resp, 'protected resource request')" not in SOURCE:
     errors.append("protected Fitbit resource calls must enforce HTTP status checks")
+
+if (
+    "MAX_RESPONSE_BODY_BYTES = 1 << 20" not in SOURCE
+    or "response.read(MAX_RESPONSE_BODY_BYTES + 1)" not in SOURCE
+    or "response exceeds %s bytes" not in SOURCE
+):
+    errors.append("fitbit.py must bound OAuth and protected response body reads")
+
+for test_contract in [
+    "test_rejects_oversized_oauth_token_responses",
+    "test_rejects_oversized_protected_resource_responses",
+    "test_accepts_response_at_size_limit",
+    "FakeHTTPResponse.read_sizes",
+    "fitbit.MAX_RESPONSE_BODY_BYTES + 1",
+]:
+    if test_contract not in TEST_SOURCE:
+        errors.append("legacy tests must preserve %s" % test_contract)
+
+for document_name in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
+    document = (ROOT / document_name).read_text()
+    if "bounded response reads" not in document:
+        errors.append("%s must document bounded response reads" % document_name)
 
 if errors:
     print("\n".join(errors), file=sys.stderr)

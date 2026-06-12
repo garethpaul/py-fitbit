@@ -1,16 +1,22 @@
 # Changes
 
+## 2026-06-12
+
+- Added 1 MiB bounded response reads for OAuth token exchanges and protected
+  resources, with exact Python 2 read-limit and oversized-payload regressions.
+
 ## 2026-06-10
 
-- Added read-only hosted verification in a digest-pinned Python 2.7.18
-  container without skipping legacy tests.
-- Extended the safety checker to preserve the container, checkout, and
-  full-gate workflow contract.
+- Added digest-pinned Python 2.7 hosted validation that runs the full mocked
+  Fitbit OAuth baseline without skipping legacy tests.
+- Added credential-free checkout, read-only permissions, CODEOWNERS, and
+  sole-workflow enforcement.
+- Extended the legacy safety checker to require the CI workflow and completed
+  CI plans.
 - Added a cached access-token read guard that rejects `access_token.string`
   files with group or other permissions before opening a Fitbit request.
 - Added HTTP status validation for OAuth token exchanges and protected resource
   calls without exposing failed response bodies in errors.
-
 ## 2026-06-09
 
 - Added bytecode-free verification coverage for the legacy Python 2 tests.
