@@ -8,6 +8,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = (ROOT / "fitbit.py").read_text()
+README = (ROOT / "README.md").read_text()
+MAKEFILE = (ROOT / "Makefile").read_text()
+CI_PLAN = ROOT / "docs" / "plans" / "2026-06-10-ci-baseline.md"
+CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
+CODEOWNERS = ROOT / ".github" / "CODEOWNERS"
 GITIGNORE_LINES = {
     line.strip()
     for line in (ROOT / ".gitignore").read_text().splitlines()
@@ -18,6 +23,59 @@ errors = []
 
 if "access_token.string" not in GITIGNORE_LINES:
     errors.append(".gitignore must ignore access_token.string")
+
+if not CI_PLAN.exists():
+    errors.append("docs/plans/2026-06-10-ci-baseline.md is missing")
+else:
+    plan = CI_PLAN.read_text()
+    if "Status: Completed" not in plan or "make check" not in plan:
+        errors.append("CI baseline plan must be completed and record make check")
+
+if not CI_WORKFLOW.exists():
+    errors.append(".github/workflows/check.yml is missing")
+else:
+    workflow = CI_WORKFLOW.read_text()
+    required_fragments = [
+        "runs-on: ubuntu-24.04",
+        "workflow_dispatch:",
+        "permissions:\n  contents: read",
+        "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+        "persist-credentials: false",
+        "python:2.7.18@sha256:c934af72b8bd03b9804d5bde2569c320926e70392d708d113a2e71bcf98c8a20",
+        "run: make check",
+    ]
+    for fragment in required_fragments:
+        if fragment not in workflow:
+            errors.append("CI workflow must include %s" % fragment)
+    if workflow.count("actions/checkout@") != 1:
+        errors.append("CI workflow must use exactly one checkout action")
+    if workflow.count("persist-credentials:") != 1:
+        errors.append("CI workflow must set checkout credential persistence exactly once")
+    if workflow.count("permissions:") != 1 or re.search(r"^\s+[\w-]+:\s+write\s*$", workflow, re.MULTILINE):
+        errors.append("CI workflow must keep one read-only permissions block")
+    if "setup-python@" in workflow:
+        errors.append("CI workflow must use the pinned Python 2 container, not setup-python")
+    if "continue-on-error" in workflow:
+        errors.append("CI workflow must not allow legacy verification failures")
+    if "branches:" in workflow:
+        errors.append("CI workflow must validate pushes on every branch")
+
+workflow_files = sorted(
+    str(path.relative_to(ROOT))
+    for path in (ROOT / ".github" / "workflows").rglob("*")
+    if path.is_file()
+)
+if workflow_files != [".github/workflows/check.yml"]:
+    errors.append("check.yml must be the repository's only hosted workflow")
+
+if not CODEOWNERS.exists() or CODEOWNERS.read_text().strip() != "* @garethpaul":
+    errors.append("CODEOWNERS must assign the repository to @garethpaul")
+
+if "GitHub Actions" not in README:
+    errors.append("README must document the GitHub Actions check")
+
+if "command -v python2" in MAKEFILE or "Skipping legacy Python 2" in MAKEFILE:
+    errors.append("Makefile must require Python 2 checks instead of skipping them")
 
 if "__pycache__/" not in GITIGNORE_LINES:
     errors.append(".gitignore must ignore __pycache__/")

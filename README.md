@@ -12,6 +12,7 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 ## Repository Contents
 
 - `README.md` - project overview and local usage notes
+- `.github/workflows/check.yml` - GitHub Actions baseline for `make check`
 - `CHANGES.md` - notable maintenance changes
 - `Makefile` - local verification entry points
 - `docs/plans` - canonical completed maintenance plans
@@ -71,6 +72,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Run `make check` before committing changes.
 - Run `make build` for the static legacy verification gate; it uses the same
   mocked Python 2 tests as `make test`.
+- GitHub Actions runs the complete `make check` gate in a digest-pinned Python
+  2.7.18 container for every push and pull request.
 - `make check` delegates to `make verify`, which compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, runs mocked OAuth request, request-token flow, API path validation, and token-cache tests without contacting Fitbit, and verifies completed plans under `docs/plans`.
 - The test target disables Python bytecode writes, and the legacy safety check
   rejects checked-out `.pyc` files or `__pycache__` directories.
@@ -119,6 +122,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   HTTPS guard.
 - See `docs/plans/2026-06-09-bytecode-free-verification.md` for the
   bytecode-free legacy verification guard.
+- See `docs/plans/2026-06-10-ci-baseline.md` for the pinned full Python 2
+  GitHub Actions baseline.
 
 ## Contributing
 

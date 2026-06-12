@@ -35,6 +35,7 @@ Priority:
 - Keep OAuth endpoints pinned to HTTPS
 - Keep legacy verification from leaving Python bytecode in the repository tree
 - Keep completed maintenance plans under `docs/plans`
+- Keep the static `make check` baseline running in GitHub Actions
 
 Next priorities:
 

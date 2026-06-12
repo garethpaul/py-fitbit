@@ -1,5 +1,14 @@
 # Changes
 
+## 2026-06-10
+
+- Added digest-pinned Python 2.7 hosted validation that runs the full mocked
+  Fitbit OAuth baseline without skipping legacy tests.
+- Added credential-free checkout, read-only permissions, CODEOWNERS, and
+  sole-workflow enforcement.
+- Extended the legacy safety checker to require the CI workflow and completed
+  CI plan.
+
 ## 2026-06-09
 
 - Added bytecode-free verification coverage for the legacy Python 2 tests.
