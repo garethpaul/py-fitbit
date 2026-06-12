@@ -117,7 +117,11 @@ class FakeHTTPSConnection(object):
     def __init__(self, server):
         self.server = server
         self.requests = []
+        self.debug_levels = []
         FakeHTTPSConnection.instances.append(self)
+
+    def set_debuglevel(self, level):
+        self.debug_levels.append(level)
 
     def request(self, method, url, body=None, headers=None):
         self.requests.append((method, url, headers))
@@ -286,8 +290,10 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         self.assertEqual([], FakeHTTPSConnection.instances)
 
     def test_request_token_flow_writes_owner_only_access_token_cache(self):
-        request_token = 'oauth_token=request-key&oauth_token_secret=request-secret'
-        access_token = 'oauth_token=access-key&oauth_token_secret=access-secret'
+        request_secret = 'request-secret-must-not-be-logged'
+        access_secret = 'access-secret-must-not-be-logged'
+        request_token = 'oauth_token=request-key&oauth_token_secret=%s' % request_secret
+        access_token = 'oauth_token=access-key&oauth_token_secret=%s' % access_secret
         FakeHTTPSConnection.response_bodies = [
             request_token,
             access_token,
@@ -296,12 +302,20 @@ class FitbitOAuthRequestTest(unittest.TestCase):
 
         original_stdout = sys.stdout
         try:
-            sys.stdout = StringIO.StringIO()
+            output = StringIO.StringIO()
+            sys.stdout = output
             data = fitbit.fitbit('/1/user/-/profile.json')
         finally:
             sys.stdout = original_stdout
 
         self.assertEqual('{"profile": true}', data)
+        console_output = output.getvalue()
+        self.assertNotIn(request_secret, console_output)
+        self.assertNotIn(access_secret, console_output)
+        self.assertNotIn(request_token, console_output)
+        self.assertNotIn(access_token, console_output)
+        self.assertIn('Authorization URL:', console_output)
+        self.assertIn('oauth_token=request-key', console_output)
         self.assertEqual([request_token, access_token], FakeOAuthToken.parsed_values)
         self.assertEqual(3, len(FakeOAuthRequest.created))
 
@@ -329,6 +343,64 @@ class FitbitOAuthRequestTest(unittest.TestCase):
             ('GET', fitbit.ACCESS_TOKEN_URL, None),
             ('GET', '/1/user/-/profile.json', {'Authorization': 'OAuth realm=api.fitbit.com'}),
         ], connection.requests)
+
+    def test_debug_output_omits_signed_url_and_response_body(self):
+        signed_url_secret = 'signed-url-secret-must-not-be-logged'
+        response_secret = 'response-secret-must-not-be-logged'
+        oauth_request = FakeOAuthRequest(
+            FakeOAuthConsumer('consumer', 'secret'),
+            http_url='https://api.fitbit.com/oauth/request_token?oauth_signature=%s' %
+            signed_url_secret,
+        )
+        FakeHTTPSConnection.response_bodies = [
+            'oauth_token=request-key&oauth_token_secret=%s' % response_secret,
+        ]
+        connection = FakeHTTPSConnection(fitbit.SERVER)
+
+        original_stdout = sys.stdout
+        try:
+            output = StringIO.StringIO()
+            sys.stdout = output
+            response = fitbit.fetch_response(oauth_request, connection, debug=True)
+        finally:
+            sys.stdout = original_stdout
+
+        console_output = output.getvalue()
+        self.assertIn('OAuth request method: GET', console_output)
+        self.assertIn('OAuth response status: 200', console_output)
+        self.assertIn('OAuth response bytes: %s' % len(response), console_output)
+        self.assertNotIn(signed_url_secret, console_output)
+        self.assertNotIn(response_secret, console_output)
+        self.assertNotIn(oauth_request.http_url, console_output)
+        self.assertNotIn(response, console_output)
+
+    def test_debug_mode_does_not_enable_transport_trace_or_log_secrets(self):
+        request_secret = 'debug-request-secret-must-not-be-logged'
+        access_secret = 'debug-access-secret-must-not-be-logged'
+        FakeHTTPSConnection.response_bodies = [
+            'oauth_token=request-key&oauth_token_secret=%s' % request_secret,
+            'oauth_token=access-key&oauth_token_secret=%s' % access_secret,
+            '{"profile": true}',
+        ]
+
+        original_debug = fitbit.DEBUG
+        original_stdout = sys.stdout
+        try:
+            fitbit.DEBUG = True
+            output = StringIO.StringIO()
+            sys.stdout = output
+            data = fitbit.fitbit('/1/user/-/profile.json')
+        finally:
+            fitbit.DEBUG = original_debug
+            sys.stdout = original_stdout
+
+        console_output = output.getvalue()
+        self.assertEqual('{"profile": true}', data)
+        self.assertNotIn(request_secret, console_output)
+        self.assertNotIn(access_secret, console_output)
+        self.assertEqual(2, console_output.count('OAuth request method: GET'))
+        self.assertEqual(2, console_output.count('OAuth response status: 200'))
+        self.assertEqual([], FakeHTTPSConnection.instances[0].debug_levels)
 
     def test_rejects_failed_oauth_token_responses(self):
         FakeHTTPSConnection.response_bodies = ['temporarily unavailable']

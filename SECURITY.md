@@ -47,6 +47,9 @@ responses are rejected without copying their bodies into exception messages,
 where credential or health-data details could otherwise leak into logs.
 Both paths use bounded response reads of 1 MiB plus one detection byte so a bad
 endpoint cannot force an unbounded credential or health-data allocation.
+Interactive authorization does not print OAuth token secrets. Debug output is
+limited to request methods, response statuses, and response sizes so signed
+URLs and raw token response bodies do not persist in terminal or build logs.
 
 Hosted verification runs the full mocked OAuth gate in a digest-pinned Python
 2.7.18 container with read-only repository permissions. It does not contact

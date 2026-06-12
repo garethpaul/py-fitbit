@@ -88,8 +88,9 @@ def fetch_response(oauth_request, connection, debug=DEBUG):
    response = connection.getresponse()
    s=read_success_response(response, 'OAuth request')
    if debug:
-      print 'requested URL: %s' % url
-      print 'server response: %s' % s
+      print 'OAuth request method: %s' % oauth_request.http_method
+      print 'OAuth response status: %s' % response.status
+      print 'OAuth response bytes: %s' % len(s)
    return s
 
 
@@ -117,14 +118,9 @@ def fitbit(api_call):
       print '* Obtain a request token ...'
       oauth_request = oauth.OAuthRequest.from_consumer_and_token(
             consumer, http_url=REQUEST_TOKEN_URL)
-      if DEBUG:
-         connection.set_debuglevel(10)
       oauth_request.sign_request(signature_method, consumer, None)
-      resp=fetch_response(oauth_request, connection)
+      resp=fetch_response(oauth_request, connection, debug=DEBUG)
       auth_token=oauth.OAuthToken.from_string(resp)
-      print 'Auth key: %s' % str(auth_token.key)
-      print 'Auth secret: %s' % str(auth_token.secret)
-      print '-'*75,'\n\n'
 
       # authorize the request token
       print '* Authorize the request token ...'
@@ -144,11 +140,7 @@ def fitbit(api_call):
       # now the token we get back is an access token
       # parse the response into an OAuthToken object
       access_token=oauth.OAuthToken.from_string(
-         fetch_response(oauth_request,connection))
-      print 'Access key: %s' % str(access_token.key)
-      print 'Access secret: %s' % str(access_token.secret)
-      print '-'*75,'\n\n'
-
+         fetch_response(oauth_request, connection, debug=DEBUG))
 
       # write the access token to file; next time we just read it from file
       if DEBUG:

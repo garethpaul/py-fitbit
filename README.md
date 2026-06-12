@@ -71,6 +71,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   responses without including the upstream response body in the exception.
 - OAuth and protected-resource paths use bounded response reads of 1 MiB plus
   one detection byte and reject oversized credential or health-data payloads.
+- Interactive authorization never prints OAuth token secrets. Optional debug
+  output reports only request methods, response statuses, and response sizes;
+  it does not print signed URLs or raw token response bodies.
 
 ## Testing and Verification
 
@@ -84,7 +87,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   rejects checked-out `.pyc` files or `__pycache__` directories.
 - GitHub Actions runs the complete gate in the official Python 2.7.18 image,
   pinned by digest, with read-only repository permissions. The job does not
-  skip Python 2 compilation or the thirteen mocked OAuth tests.
+  skip Python 2 compilation or the fifteen mocked OAuth tests.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
