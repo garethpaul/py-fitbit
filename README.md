@@ -12,7 +12,7 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 ## Repository Contents
 
 - `README.md` - project overview and local usage notes
-- `.github/workflows/check.yml` - GitHub Actions baseline for `make check`
+- `.github/workflows/check.yml` - pinned Python 2.7 hosted verification
 - `CHANGES.md` - notable maintenance changes
 - `Makefile` - local verification entry points
 - `docs/plans` - canonical completed maintenance plans
@@ -65,7 +65,10 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   `oauth_token`, `access_token`, or `client_secret`; OAuth credentials belong
   in the signed request header or local settings.
 - `access_token.string` is a local token cache, must stay untracked, and is
-  written with owner-only permissions.
+  written with owner-only permissions. Existing token-cache files with group or
+  other permissions are rejected before a Fitbit network request is opened.
+- OAuth token exchanges and protected resource calls reject non-2xx HTTP
+  responses without including the upstream response body in the exception.
 
 ## Testing and Verification
 
@@ -77,6 +80,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - `make check` delegates to `make verify`, which compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, runs mocked OAuth request, request-token flow, API path validation, and token-cache tests without contacting Fitbit, and verifies completed plans under `docs/plans`.
 - The test target disables Python bytecode writes, and the legacy safety check
   rejects checked-out `.pyc` files or `__pycache__` directories.
+- GitHub Actions runs the complete gate in the official Python 2.7.18 image,
+  pinned by digest, with read-only repository permissions. The job does not
+  skip Python 2 compilation or the ten mocked OAuth tests.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -97,6 +103,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   path segments before network requests are opened.
 - Protected Fitbit resource paths reject credential query parameters before
   network requests are opened.
+- Existing `access_token.string` files must be owner-only; readable-by-group or
+  readable-by-other cache files are rejected before network requests are
+  opened.
 
 ## Maintenance Notes
 
@@ -124,6 +133,12 @@ When the required SDK or runtime is unavailable, use static checks and source re
   bytecode-free legacy verification guard.
 - See `docs/plans/2026-06-10-ci-baseline.md` for the pinned full Python 2
   GitHub Actions baseline.
+- See `docs/plans/2026-06-10-token-cache-read-permissions.md` for the
+  token-cache read permission guard.
+- See `docs/plans/2026-06-10-hosted-legacy-validation.md` for digest-pinned,
+  full Python 2.7 hosted verification.
+- See `docs/plans/2026-06-10-http-status-validation.md` for OAuth and protected
+  resource response status validation.
 
 ## Contributing
 

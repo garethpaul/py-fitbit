@@ -10,7 +10,10 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = (ROOT / "fitbit.py").read_text()
 README = (ROOT / "README.md").read_text()
 MAKEFILE = (ROOT / "Makefile").read_text()
-CI_PLAN = ROOT / "docs" / "plans" / "2026-06-10-ci-baseline.md"
+CI_PLANS = [
+    ROOT / "docs" / "plans" / "2026-06-10-ci-baseline.md",
+    ROOT / "docs" / "plans" / "2026-06-10-hosted-legacy-validation.md",
+]
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
 CODEOWNERS = ROOT / ".github" / "CODEOWNERS"
 GITIGNORE_LINES = {
@@ -24,12 +27,13 @@ errors = []
 if "access_token.string" not in GITIGNORE_LINES:
     errors.append(".gitignore must ignore access_token.string")
 
-if not CI_PLAN.exists():
-    errors.append("docs/plans/2026-06-10-ci-baseline.md is missing")
-else:
-    plan = CI_PLAN.read_text()
+for ci_plan in CI_PLANS:
+    if not ci_plan.exists():
+        errors.append("%s is missing" % ci_plan.relative_to(ROOT))
+        continue
+    plan = ci_plan.read_text()
     if "Status: Completed" not in plan or "make check" not in plan:
-        errors.append("CI baseline plan must be completed and record make check")
+        errors.append("%s must be completed and record make check" % ci_plan.relative_to(ROOT))
 
 if not CI_WORKFLOW.exists():
     errors.append(".github/workflows/check.yml is missing")
@@ -109,6 +113,13 @@ if "write_access_token_string" not in SOURCE or "0600" not in SOURCE:
 if "read_access_token_string" not in SOURCE:
     errors.append("fitbit.py must read access_token.string through a token helper")
 
+if (
+    "stat.S_IMODE" not in SOURCE
+    or "stat.S_IRWXG" not in SOURCE
+    or "stat.S_IRWXO" not in SOURCE
+):
+    errors.append("fitbit.py must reject access_token.string with group or other permissions")
+
 if "validate_api_call" not in SOURCE:
     errors.append("fitbit.py must validate protected Fitbit API paths")
 
@@ -132,6 +143,12 @@ if "path_segments" not in SOURCE or "'.', '..'" not in SOURCE or "urlparse.unquo
 
 if "CREDENTIAL_QUERY_PARAMETERS" not in SOURCE or "urlparse.parse_qsl" not in SOURCE:
     errors.append("fitbit.py must reject credential query parameters inside protected API paths")
+
+if "read_success_response" not in SOURCE or "status < 200" not in SOURCE or "status >= 300" not in SOURCE:
+    errors.append("fitbit.py must reject non-2xx Fitbit HTTP responses")
+
+if "read_success_response(resp, 'protected resource request')" not in SOURCE:
+    errors.append("protected Fitbit resource calls must enforce HTTP status checks")
 
 if errors:
     print("\n".join(errors), file=sys.stderr)

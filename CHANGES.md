@@ -7,8 +7,11 @@
 - Added credential-free checkout, read-only permissions, CODEOWNERS, and
   sole-workflow enforcement.
 - Extended the legacy safety checker to require the CI workflow and completed
-  CI plan.
-
+  CI plans.
+- Added a cached access-token read guard that rejects `access_token.string`
+  files with group or other permissions before opening a Fitbit request.
+- Added HTTP status validation for OAuth token exchanges and protected resource
+  calls without exposing failed response bodies in errors.
 ## 2026-06-09
 
 - Added bytecode-free verification coverage for the legacy Python 2 tests.

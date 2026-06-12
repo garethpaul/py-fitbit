@@ -98,8 +98,9 @@ import fitbit
 
 
 class FakeHTTPResponse(object):
-    def __init__(self, body):
+    def __init__(self, body, status=200):
         self.body = body
+        self.status = status
 
     def read(self):
         return self.body
@@ -108,6 +109,7 @@ class FakeHTTPResponse(object):
 class FakeHTTPSConnection(object):
     instances = []
     response_bodies = []
+    response_statuses = []
 
     def __init__(self, server):
         self.server = server
@@ -118,9 +120,12 @@ class FakeHTTPSConnection(object):
         self.requests.append((method, url, headers))
 
     def getresponse(self):
+        status = 200
+        if FakeHTTPSConnection.response_statuses:
+            status = FakeHTTPSConnection.response_statuses.pop(0)
         if FakeHTTPSConnection.response_bodies:
-            return FakeHTTPResponse(FakeHTTPSConnection.response_bodies.pop(0))
-        return FakeHTTPResponse('{"ok": true}')
+            return FakeHTTPResponse(FakeHTTPSConnection.response_bodies.pop(0), status)
+        return FakeHTTPResponse('{"ok": true}', status)
 
 
 class FitbitOAuthRequestTest(unittest.TestCase):
@@ -129,6 +134,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         FakeOAuthToken.parsed_values = []
         FakeHTTPSConnection.instances = []
         FakeHTTPSConnection.response_bodies = ['{"ok": true}']
+        FakeHTTPSConnection.response_statuses = []
         self.original_connection = fitbit.httplib.HTTPSConnection
         self.original_raw_input = getattr(fitbit, 'raw_input', None)
         self.original_cwd = os.getcwd()
@@ -148,8 +154,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
 
     def test_cached_access_token_signs_protected_resource_request(self):
         token_string = 'oauth_token=cached&oauth_token_secret=secret'
-        with open(fitbit.ACCESS_TOKEN_STRING_FNAME, 'w') as token_file:
-            token_file.write(token_string)
+        fitbit.write_access_token_string(token_string)
 
         original_stdout = sys.stdout
         try:
@@ -181,8 +186,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
 
     def test_protected_resource_path_is_trimmed(self):
         token_string = 'oauth_token=cached&oauth_token_secret=secret'
-        with open(fitbit.ACCESS_TOKEN_STRING_FNAME, 'w') as token_file:
-            token_file.write(token_string)
+        fitbit.write_access_token_string(token_string)
 
         original_stdout = sys.stdout
         try:
@@ -203,8 +207,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
 
     def test_protected_resource_path_preserves_non_secret_query(self):
         token_string = 'oauth_token=cached&oauth_token_secret=secret'
-        with open(fitbit.ACCESS_TOKEN_STRING_FNAME, 'w') as token_file:
-            token_file.write(token_string)
+        fitbit.write_access_token_string(token_string)
 
         original_stdout = sys.stdout
         try:
@@ -261,6 +264,23 @@ class FitbitOAuthRequestTest(unittest.TestCase):
             fitbit.read_access_token_string(),
         )
 
+    def test_rejects_readable_access_token_cache_before_network(self):
+        token_string = 'oauth_token=cached&oauth_token_secret=secret'
+        with open(fitbit.ACCESS_TOKEN_STRING_FNAME, 'w') as token_file:
+            token_file.write(token_string)
+        os.chmod(fitbit.ACCESS_TOKEN_STRING_FNAME, 0644)
+
+        original_stdout = sys.stdout
+        try:
+            sys.stdout = StringIO.StringIO()
+            with self.assertRaises(ValueError):
+                fitbit.fitbit('/1/user/-/profile.json')
+        finally:
+            sys.stdout = original_stdout
+
+        self.assertEqual([], FakeOAuthRequest.created)
+        self.assertEqual([], FakeHTTPSConnection.instances)
+
     def test_request_token_flow_writes_owner_only_access_token_cache(self):
         request_token = 'oauth_token=request-key&oauth_token_secret=request-secret'
         access_token = 'oauth_token=access-key&oauth_token_secret=access-secret'
@@ -305,6 +325,41 @@ class FitbitOAuthRequestTest(unittest.TestCase):
             ('GET', fitbit.ACCESS_TOKEN_URL, None),
             ('GET', '/1/user/-/profile.json', {'Authorization': 'OAuth realm=api.fitbit.com'}),
         ], connection.requests)
+
+    def test_rejects_failed_oauth_token_responses(self):
+        FakeHTTPSConnection.response_bodies = ['temporarily unavailable']
+        FakeHTTPSConnection.response_statuses = [503]
+
+        original_stdout = sys.stdout
+        try:
+            sys.stdout = StringIO.StringIO()
+            with self.assertRaises(IOError) as raised:
+                fitbit.fitbit('/1/user/-/profile.json')
+        finally:
+            sys.stdout = original_stdout
+
+        self.assertIn('OAuth request failed with HTTP status 503', str(raised.exception))
+        self.assertFalse(os.path.exists(fitbit.ACCESS_TOKEN_STRING_FNAME))
+        self.assertEqual([], FakeOAuthToken.parsed_values)
+
+    def test_rejects_failed_protected_resource_responses(self):
+        fitbit.write_access_token_string('oauth_token=cached&oauth_token_secret=secret')
+        FakeHTTPSConnection.response_bodies = ['not authorized']
+        FakeHTTPSConnection.response_statuses = [401]
+
+        original_stdout = sys.stdout
+        try:
+            sys.stdout = StringIO.StringIO()
+            with self.assertRaises(IOError) as raised:
+                fitbit.fitbit('/1/user/-/profile.json')
+        finally:
+            sys.stdout = original_stdout
+
+        self.assertIn(
+            'protected resource request failed with HTTP status 401',
+            str(raised.exception),
+        )
+        self.assertNotIn('not authorized', str(raised.exception))
 
     def test_oauth_endpoints_use_https(self):
         self.assertEqual('https://api.fitbit.com/oauth/request_token', fitbit.REQUEST_TOKEN_URL)

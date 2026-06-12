@@ -25,7 +25,10 @@ Priority:
   credential-safety checks
 - Avoid printing or committing real access tokens
 - Keep local token-cache files owner-only
+- Reject cached access-token files that are readable by group or other users
 - Keep cached-token and request-token OAuth branches covered by mocks
+- Reject failed OAuth and protected-resource HTTP responses before parsing or
+  returning their bodies
 - Keep protected resource calls constrained to Fitbit API paths
 - Reject raw whitespace inside protected resource API paths
 - Reject URL fragments inside protected resource API paths
@@ -34,6 +37,8 @@ Priority:
 - Reject credential query parameters inside protected resource API paths
 - Keep OAuth endpoints pinned to HTTPS
 - Keep legacy verification from leaving Python bytecode in the repository tree
+- Run the complete legacy gate in digest-pinned hosted Python 2.7 without
+  skipping mocked OAuth coverage
 - Keep completed maintenance plans under `docs/plans`
 - Keep the static `make check` baseline running in GitHub Actions
 
