@@ -8,11 +8,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = (ROOT / "fitbit.py").read_text()
+TEST_SOURCE = (ROOT / "tests" / "test_fitbit_oauth_request.py").read_text()
 README = (ROOT / "README.md").read_text()
 MAKEFILE = (ROOT / "Makefile").read_text()
 CI_PLANS = [
     ROOT / "docs" / "plans" / "2026-06-10-ci-baseline.md",
     ROOT / "docs" / "plans" / "2026-06-10-hosted-legacy-validation.md",
+    ROOT / "docs" / "plans" / "2026-06-12-response-body-size-boundary.md",
 ]
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
 CODEOWNERS = ROOT / ".github" / "CODEOWNERS"
@@ -149,6 +151,28 @@ if "read_success_response" not in SOURCE or "status < 200" not in SOURCE or "sta
 
 if "read_success_response(resp, 'protected resource request')" not in SOURCE:
     errors.append("protected Fitbit resource calls must enforce HTTP status checks")
+
+if (
+    "MAX_RESPONSE_BODY_BYTES = 1 << 20" not in SOURCE
+    or "response.read(MAX_RESPONSE_BODY_BYTES + 1)" not in SOURCE
+    or "response exceeds %s bytes" not in SOURCE
+):
+    errors.append("fitbit.py must bound OAuth and protected response body reads")
+
+for test_contract in [
+    "test_rejects_oversized_oauth_token_responses",
+    "test_rejects_oversized_protected_resource_responses",
+    "test_accepts_response_at_size_limit",
+    "FakeHTTPResponse.read_sizes",
+    "fitbit.MAX_RESPONSE_BODY_BYTES + 1",
+]:
+    if test_contract not in TEST_SOURCE:
+        errors.append("legacy tests must preserve %s" % test_contract)
+
+for document_name in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
+    document = (ROOT / document_name).read_text()
+    if "bounded response reads" not in document:
+        errors.append("%s must document bounded response reads" % document_name)
 
 if errors:
     print("\n".join(errors), file=sys.stderr)

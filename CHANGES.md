@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-12
+
+- Added 1 MiB bounded response reads for OAuth token exchanges and protected
+  resources, with exact Python 2 read-limit and oversized-payload regressions.
+
 ## 2026-06-10
 
 - Added digest-pinned Python 2.7 hosted validation that runs the full mocked
