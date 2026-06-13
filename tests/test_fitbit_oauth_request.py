@@ -127,6 +127,7 @@ class FakeHTTPSConnection(object):
         self.server = server
         self.requests = []
         self.debug_levels = []
+        self.close_calls = 0
         FakeHTTPSConnection.instances.append(self)
 
     def set_debuglevel(self, level):
@@ -142,6 +143,9 @@ class FakeHTTPSConnection(object):
         if FakeHTTPSConnection.response_bodies:
             return FakeHTTPResponse(FakeHTTPSConnection.response_bodies.pop(0), status)
         return FakeHTTPResponse('{"ok": true}', status)
+
+    def close(self):
+        self.close_calls += 1
 
 
 class FitbitOAuthRequestTest(unittest.TestCase):
@@ -201,6 +205,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
             [('GET', '/1/user/-/profile.json', {'Authorization': 'OAuth realm=api.fitbit.com'})],
             connection.requests,
         )
+        self.assertEqual(1, connection.close_calls)
 
     def test_protected_resource_path_is_trimmed(self):
         token_string = 'oauth_token=cached&oauth_token_secret=secret'
@@ -371,6 +376,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
             ('GET', fitbit.ACCESS_TOKEN_URL, None),
             ('GET', '/1/user/-/profile.json', {'Authorization': 'OAuth realm=api.fitbit.com'}),
         ], connection.requests)
+        self.assertEqual(1, connection.close_calls)
 
     def test_debug_output_omits_signed_url_and_response_body(self):
         signed_url_secret = 'signed-url-secret-must-not-be-logged'
@@ -446,6 +452,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         self.assertFalse(os.path.exists(fitbit.ACCESS_TOKEN_STRING_FNAME))
         self.assertEqual([], FakeOAuthToken.parsed_values)
         self.assertEqual(1, FakeHTTPResponse.instances[0].close_calls)
+        self.assertEqual(1, FakeHTTPSConnection.instances[0].close_calls)
 
     def test_rejects_failed_protected_resource_responses(self):
         fitbit.write_access_token_string('oauth_token=cached&oauth_token_secret=secret')
@@ -466,6 +473,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         )
         self.assertNotIn('not authorized', str(raised.exception))
         self.assertEqual(1, FakeHTTPResponse.instances[0].close_calls)
+        self.assertEqual(1, FakeHTTPSConnection.instances[0].close_calls)
 
     def test_rejects_oversized_oauth_token_responses(self):
         oversized = 'oauth_token=secret&' + ('x' * fitbit.MAX_RESPONSE_BODY_BYTES)

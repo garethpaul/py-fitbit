@@ -51,6 +51,8 @@ Both paths use bounded response reads of 1 MiB plus one detection byte so a bad
 endpoint cannot force an unbounded credential or health-data allocation.
 OAuth and protected-resource response objects are closed after every attempted
 read so rejected or failed responses do not retain connection resources.
+Created HTTPS connections are closed exactly once when the complete OAuth or
+cached-token request sequence exits, including failure paths.
 Interactive authorization does not print OAuth token secrets. Debug output is
 limited to request methods, response statuses, and response sizes so signed
 URLs and raw token response bodies do not persist in terminal or build logs.

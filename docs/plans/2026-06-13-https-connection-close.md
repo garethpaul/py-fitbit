@@ -1,6 +1,6 @@
 # HTTPS Connection Close Contract
 
-Status: Pending
+Status: Completed
 
 ## Problem
 
@@ -44,8 +44,23 @@ errors can also exit without releasing the connection.
 
 ## Work Completed
 
-Pending implementation.
+- Wrapped the complete network portion of `fitbit()` in a `try`/`finally` that
+  closes the created shared HTTPS connection exactly once.
+- Preserved one connection across request-token, access-token, and protected
+  resource requests and preserved validation-before-network behavior.
+- Added close tracking and exactly-once assertions for cached-token success,
+  interactive-token success, OAuth HTTP failure, and protected-resource HTTP
+  failure.
+- Added static implementation/test contracts and synchronized maintenance,
+  security, vision, and change-log guidance.
 
 ## Verification Results
 
-Pending implementation and validation.
+- `python2 tests/test_fitbit_oauth_request.py` passed all 17 mocked tests.
+- Canonical `make check` passed on the host and in the network-disabled,
+  digest-pinned Python 2.7.18 container with a read-only source mount.
+- Eight hostile mutations covering runtime close removal, both success paths,
+  both HTTP failure paths, documentation, and completed plan status were
+  rejected, including a separate exact-evidence mutation.
+- Workflow YAML parsing, exact-base protected-file comparison, added-line
+  secret scanning, generated-artifact scanning, and `git diff --check` passed.

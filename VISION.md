@@ -32,6 +32,8 @@ Priority:
 - Keep bounded response reads on OAuth and protected-resource payloads
 - Ensure OAuth and protected-resource response objects are closed after every
   attempted read
+- Ensure created HTTPS connections are closed once after each complete client
+  call
 - Keep protected resource calls constrained to Fitbit API paths
 - Reject raw whitespace inside protected resource API paths
 - Reject URL fragments inside protected resource API paths

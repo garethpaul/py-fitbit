@@ -18,6 +18,7 @@ CI_PLANS = [
     ROOT / "docs" / "plans" / "2026-06-12-credential-safe-output.md",
     ROOT / "docs" / "plans" / "2026-06-13-response-close-contract.md",
     ROOT / "docs" / "plans" / "2026-06-13-token-cache-symlink-guard.md",
+    ROOT / "docs" / "plans" / "2026-06-13-https-connection-close.md",
 ]
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
 CODEOWNERS = ROOT / ".github" / "CODEOWNERS"
@@ -39,6 +40,24 @@ for ci_plan in CI_PLANS:
     plan = ci_plan.read_text()
     if "Status: Completed" not in plan or "make check" not in plan:
         errors.append("%s must be completed and record make check" % ci_plan.relative_to(ROOT))
+
+connection_close_plan = (
+    ROOT / "docs" / "plans" / "2026-06-13-https-connection-close.md"
+).read_text()
+for evidence in [
+    "Canonical `make check` passed",
+    "digest-pinned Python 2.7.18 container",
+    "Eight hostile mutations",
+    "Workflow YAML parsing",
+    "secret scanning",
+    "generated-artifact scanning",
+    "`git diff --check` passed",
+]:
+    if evidence not in connection_close_plan:
+        errors.append(
+            "HTTPS connection close plan must preserve verification evidence %s"
+            % evidence
+        )
 
 if not CI_WORKFLOW.exists():
     errors.append(".github/workflows/check.yml is missing")
@@ -214,6 +233,35 @@ if not response_reader or not re.search(
 ):
     errors.append("fitbit.py must close every attempted Fitbit response")
 
+fitbit_function = re.search(
+    r"^def fitbit\(.*?(?=^if __name__|\Z)",
+    SOURCE,
+    flags=re.MULTILINE | re.DOTALL,
+)
+if not fitbit_function or not re.search(
+    r"connection = None.*?try:.*?finally:\s+if connection is not None:\s+connection\.close\(\)",
+    fitbit_function.group(0),
+    flags=re.DOTALL,
+):
+    errors.append("fitbit.py must close each created HTTPS connection when the call exits")
+
+for connection_test_contract in [
+    "self.close_calls = 0",
+    "def close(self):",
+    "self.close_calls += 1",
+    "self.assertEqual(1, connection.close_calls)",
+    "self.assertEqual(1, FakeHTTPSConnection.instances[0].close_calls)",
+]:
+    if connection_test_contract not in TEST_SOURCE:
+        errors.append(
+            "legacy tests must preserve HTTPS connection cleanup contract %s"
+            % connection_test_contract
+        )
+if TEST_SOURCE.count("self.assertEqual(1, connection.close_calls)") < 2:
+    errors.append("legacy tests must cover cached and interactive success connection cleanup")
+if TEST_SOURCE.count("self.assertEqual(1, FakeHTTPSConnection.instances[0].close_calls)") < 2:
+    errors.append("legacy tests must cover OAuth and protected-resource failure connection cleanup")
+
 for test_contract in [
     "test_rejects_oversized_oauth_token_responses",
     "test_rejects_oversized_protected_resource_responses",
@@ -249,6 +297,8 @@ for document_name in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
         errors.append("%s must document bounded response reads" % document_name)
     if "response objects are closed" not in document:
         errors.append("%s must document response object cleanup" % document_name)
+    if "HTTPS connections are closed" not in document:
+        errors.append("%s must document HTTPS connection cleanup" % document_name)
 
 for document_name in ["README.md", "SECURITY.md", "CHANGES.md"]:
     document = (ROOT / document_name).read_text().lower()
