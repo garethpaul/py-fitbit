@@ -73,6 +73,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   one detection byte and reject oversized credential or health-data payloads.
 - OAuth and protected-resource response objects are closed after every read
   attempt, including status, size, and transport failures.
+- Created HTTPS connections are closed exactly once after cached-token or
+  interactive OAuth calls finish, including failure paths.
 - Interactive authorization never prints OAuth token secrets. Optional debug
   output reports only request methods, response statuses, and response sizes;
   it does not print signed URLs or raw token response bodies.
@@ -154,6 +156,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   response cleanup across success and failure paths.
 - See `docs/plans/2026-06-13-token-cache-symlink-guard.md` for descriptor-based
   permission checks and symbolic-link rejection.
+- See `docs/plans/2026-06-13-https-connection-close.md` for complete shared
+  HTTPS connection cleanup after each client call.
 
 ## Contributing
 

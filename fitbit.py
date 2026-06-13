@@ -147,62 +147,66 @@ def fitbit(api_call):
    api_call = validate_api_call(api_call)
    consumer = oauth.OAuthConsumer(CONSUMER_KEY, CONSUMER_SECRET)
    signature_method = oauth.OAuthSignatureMethod_PLAINTEXT()
+   connection = None
+   try:
+      # if local does not exist
+      if not os.path.exists(ACCESS_TOKEN_STRING_FNAME):
+         connection = httplib.HTTPSConnection(SERVER)
+         # obtain token to get request
+         print '* Obtain a request token ...'
+         oauth_request = oauth.OAuthRequest.from_consumer_and_token(
+               consumer, http_url=REQUEST_TOKEN_URL)
+         oauth_request.sign_request(signature_method, consumer, None)
+         resp=fetch_response(oauth_request, connection, debug=DEBUG)
+         auth_token=oauth.OAuthToken.from_string(resp)
 
-   # if local does not exist
-   if not os.path.exists(ACCESS_TOKEN_STRING_FNAME):
-      connection = httplib.HTTPSConnection(SERVER)
-      # obtain token to get request
-      print '* Obtain a request token ...'
-      oauth_request = oauth.OAuthRequest.from_consumer_and_token(
-            consumer, http_url=REQUEST_TOKEN_URL)
-      oauth_request.sign_request(signature_method, consumer, None)
-      resp=fetch_response(oauth_request, connection, debug=DEBUG)
-      auth_token=oauth.OAuthToken.from_string(resp)
+         # authorize the request token
+         print '* Authorize the request token ...'
+         auth_url="%s?oauth_token=%s" % (AUTHORIZATION_URL, auth_token.key)
+         print 'Authorization URL:\n%s' % auth_url
+         oauth_verifier = raw_input(
+            'Please go to the above URL and authorize the '+
+            'app -- Type in the Verification code from the website, when done: ')
+         print '* Obtain an access token ...'
+         # note that the token we're passing to the new
+         # OAuthRequest is our current request token
+         oauth_request = oauth.OAuthRequest.from_consumer_and_token(
+            consumer, token=auth_token, http_url=ACCESS_TOKEN_URL,
+            parameters={'oauth_verifier': oauth_verifier})
+         oauth_request.sign_request(signature_method, consumer, auth_token)
 
-      # authorize the request token
-      print '* Authorize the request token ...'
-      auth_url="%s?oauth_token=%s" % (AUTHORIZATION_URL, auth_token.key)
-      print 'Authorization URL:\n%s' % auth_url
-      oauth_verifier = raw_input(
-         'Please go to the above URL and authorize the '+
-         'app -- Type in the Verification code from the website, when done: ')
-      print '* Obtain an access token ...'
-      # note that the token we're passing to the new 
-      # OAuthRequest is our current request token
-      oauth_request = oauth.OAuthRequest.from_consumer_and_token(
-         consumer, token=auth_token, http_url=ACCESS_TOKEN_URL,
-         parameters={'oauth_verifier': oauth_verifier})
-      oauth_request.sign_request(signature_method, consumer, auth_token)
+         # now the token we get back is an access token
+         # parse the response into an OAuthToken object
+         access_token=oauth.OAuthToken.from_string(
+            fetch_response(oauth_request, connection, debug=DEBUG))
 
-      # now the token we get back is an access token
-      # parse the response into an OAuthToken object
-      access_token=oauth.OAuthToken.from_string(
-         fetch_response(oauth_request, connection, debug=DEBUG))
+         # write the access token to file; next time we just read it from file
+         if DEBUG:
+            print 'Writing file', ACCESS_TOKEN_STRING_FNAME
+         access_token_string = access_token.to_string()
+         write_access_token_string(access_token_string)
 
-      # write the access token to file; next time we just read it from file
-      if DEBUG:
-         print 'Writing file', ACCESS_TOKEN_STRING_FNAME
-      access_token_string = access_token.to_string()
-      write_access_token_string(access_token_string)
+      else:
+         if DEBUG:
+            print 'Reading file', ACCESS_TOKEN_STRING_FNAME
+         access_token_string = read_access_token_string()
 
-   else:
-      if DEBUG:
-         print 'Reading file', ACCESS_TOKEN_STRING_FNAME
-      access_token_string = read_access_token_string()
+         access_token = oauth.OAuthToken.from_string(access_token_string)
+         connection = httplib.HTTPSConnection(SERVER)
 
-      access_token = oauth.OAuthToken.from_string(access_token_string)
-      connection = httplib.HTTPSConnection(SERVER)
-
-   # access protected resource
-   print '* Access a protected resource ...'
-   oauth_request = oauth.OAuthRequest.from_consumer_and_token(consumer,
-      token=access_token, http_url=api_call)
-   oauth_request.sign_request(signature_method, consumer, access_token)
-   headers = oauth_request.to_header(realm='api.fitbit.com')
-   connection.request('GET', api_call, headers=headers)
-   resp = connection.getresponse()
-   data = read_success_response(resp, 'protected resource request')
-   return data
+      # access protected resource
+      print '* Access a protected resource ...'
+      oauth_request = oauth.OAuthRequest.from_consumer_and_token(consumer,
+         token=access_token, http_url=api_call)
+      oauth_request.sign_request(signature_method, consumer, access_token)
+      headers = oauth_request.to_header(realm='api.fitbit.com')
+      connection.request('GET', api_call, headers=headers)
+      resp = connection.getresponse()
+      data = read_success_response(resp, 'protected resource request')
+      return data
+   finally:
+      if connection is not None:
+         connection.close()
 
 if __name__ == '__main__':
    print json.loads(fitbit('/1/user/-/sleep/date/2013-08-31.json'))
