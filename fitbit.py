@@ -1,7 +1,7 @@
 """
 A Python library for accessing the FitBit API.
 """
-import os, httplib, stat
+import errno, os, httplib, stat
 import urlparse
 from oauth import oauth 
 import json
@@ -26,20 +26,54 @@ CREDENTIAL_QUERY_PARAMETERS = set([
 ])
 
 
-def read_access_token_string(fname=ACCESS_TOKEN_STRING_FNAME):
-   mode = stat.S_IMODE(os.stat(fname).st_mode)
-   if mode & (stat.S_IRWXG | stat.S_IRWXO):
-      raise ValueError('access token cache must be owner-only')
+def token_cache_flags(flags):
+   if hasattr(os, 'O_NOFOLLOW'):
+      flags |= os.O_NOFOLLOW
+   return flags
 
-   fobj = open(fname)
+
+def reject_token_cache_symlink(fname):
    try:
-      return fobj.read()
+      if stat.S_ISLNK(os.lstat(fname).st_mode):
+         raise ValueError('access token cache must not be a symbolic link')
+   except OSError as error:
+      if error.errno != errno.ENOENT:
+         raise
+
+
+def read_access_token_string(fname=ACCESS_TOKEN_STRING_FNAME):
+   reject_token_cache_symlink(fname)
+   try:
+      fd = os.open(fname, token_cache_flags(os.O_RDONLY))
+   except OSError:
+      reject_token_cache_symlink(fname)
+      raise
+   try:
+      mode = stat.S_IMODE(os.fstat(fd).st_mode)
+      if mode & (stat.S_IRWXG | stat.S_IRWXO):
+         raise ValueError('access token cache must be owner-only')
+      fobj = os.fdopen(fd)
+      fd = None
+      try:
+         return fobj.read()
+      finally:
+         fobj.close()
    finally:
-      fobj.close()
+      if fd is not None:
+         os.close(fd)
 
 
 def write_access_token_string(access_token_string, fname=ACCESS_TOKEN_STRING_FNAME):
-   fd = os.open(fname, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0600)
+   reject_token_cache_symlink(fname)
+   try:
+      fd = os.open(
+         fname,
+         token_cache_flags(os.O_WRONLY | os.O_CREAT | os.O_TRUNC),
+         0600,
+      )
+   except OSError:
+      reject_token_cache_symlink(fname)
+      raise
    try:
       if hasattr(os, 'fchmod'):
          os.fchmod(fd, 0600)

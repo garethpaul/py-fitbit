@@ -113,6 +113,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Existing `access_token.string` files must be owner-only; readable-by-group or
   readable-by-other cache files are rejected before network requests are
   opened.
+- Token-cache reads and writes reject symbolic links, and read permissions are
+  checked on the opened file descriptor.
 
 ## Maintenance Notes
 
@@ -150,6 +152,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   response reads across OAuth and protected-resource requests.
 - See `docs/plans/2026-06-13-response-close-contract.md` for deterministic
   response cleanup across success and failure paths.
+- See `docs/plans/2026-06-13-token-cache-symlink-guard.md` for descriptor-based
+  permission checks and symbolic-link rejection.
 
 ## Contributing
 

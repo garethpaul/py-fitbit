@@ -1,6 +1,6 @@
 # Token Cache Symlink Guard
 
-Status: Planned
+Status: Completed
 
 ## Problem
 
@@ -29,6 +29,24 @@ credential write into another file.
 - Do not change OAuth endpoints, request signing, API-call validation, response
   bounds, or response closure behavior.
 
+## Work Completed
+
+- Added symbolic-link rejection for token-cache reads and writes, with
+  `O_NOFOLLOW` applied when the platform provides it.
+- Replaced pathname permission validation with `fstat` on the opened read
+  descriptor.
+- Preserved owner-only creation and rewrite behavior and complete token text
+  reads.
+- Added Python 2 regression coverage proving both operations reject a symlink
+  without changing its target, plus Python 3 static contracts and docs.
+
 ## Verification
 
-Pending implementation.
+- `make check` passed Python 2 compilation, 17 mocked tests, Python 3 static
+  contracts, and completed-plan validation on the host.
+- The same `make check` passed in the digest-pinned Python 2.7.18 CI image with
+  networking disabled, a read-only source mount, and a disposable copy.
+- Four temporary hostile mutations were rejected: removed link detection,
+  restored pathname permission checks, removed target-integrity assertions,
+  and regressed plan completion status.
+- `git diff --check` passed for the completed implementation.

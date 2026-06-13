@@ -282,6 +282,24 @@ class FitbitOAuthRequestTest(unittest.TestCase):
             fitbit.read_access_token_string(),
         )
 
+    def test_access_token_cache_rejects_symbolic_links(self):
+        if not hasattr(os, 'symlink'):
+            self.skipTest('symbolic links are unavailable')
+
+        target = 'token-target.string'
+        with open(target, 'w') as token_file:
+            token_file.write('target-must-remain-unchanged')
+        os.chmod(target, 0600)
+        os.symlink(target, fitbit.ACCESS_TOKEN_STRING_FNAME)
+
+        with self.assertRaises(ValueError):
+            fitbit.read_access_token_string()
+        with self.assertRaises(ValueError):
+            fitbit.write_access_token_string('replacement-secret')
+
+        with open(target) as token_file:
+            self.assertEqual('target-must-remain-unchanged', token_file.read())
+
     def test_rejects_readable_access_token_cache_before_network(self):
         token_string = 'oauth_token=cached&oauth_token_secret=secret'
         with open(fitbit.ACCESS_TOKEN_STRING_FNAME, 'w') as token_file:
