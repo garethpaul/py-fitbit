@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-13
+
+- Ensured OAuth and protected-resource response objects are closed after every
+  bounded read attempt, including status, size, and read failures.
+
 ## 2026-06-12
 
 - Added 1 MiB bounded response reads for OAuth token exchanges and protected

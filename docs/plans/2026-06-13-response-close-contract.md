@@ -1,13 +1,13 @@
 ---
 title: Response Close Contract
 type: fix
-status: planned
+status: completed
 date: 2026-06-13
 ---
 
 # Response Close Contract
 
-Status: Planned
+Status: Completed
 
 ## Context
 
@@ -92,4 +92,29 @@ Requirements:
 - `make check`
 - digest-pinned Python 2.7.18 container `make check`
 - workflow YAML parse
+- `git diff --check`
+
+## Work Completed
+
+- Wrapped the existing bounded response read and validation logic in
+  `try`/`finally` and close each attempted response exactly once.
+- Added deterministic response instances, close counts, and a synthetic read
+  failure to the mocked Python 2 suite.
+- Protected the response-close implementation, tests, documentation, and this
+  completed plan in the fail-closed repository checker.
+
+## Verification Results
+
+Completed locally on 2026-06-13:
+
+- `python2 tests/test_fitbit_oauth_request.py` (16 tests passed)
+- `python3 scripts/check_legacy_fitbit.py`
+- `make lint`
+- `make test`
+- `make build`
+- `make verify`
+- `make check`
+- network-isolated digest-pinned Python 2.7.18 container `make check`
+- workflow YAML parse
+- six hostile cleanup-contract mutations rejected
 - `git diff --check`

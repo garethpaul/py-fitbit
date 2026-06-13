@@ -98,15 +98,24 @@ import fitbit
 
 
 class FakeHTTPResponse(object):
+    instances = []
     read_sizes = []
 
-    def __init__(self, body, status=200):
+    def __init__(self, body, status=200, read_error=None):
         self.body = body
         self.status = status
+        self.read_error = read_error
+        self.close_calls = 0
+        self.__class__.instances.append(self)
 
     def read(self, size=None):
         self.__class__.read_sizes.append(size)
+        if self.read_error is not None:
+            raise self.read_error
         return self.body if size is None else self.body[:size]
+
+    def close(self):
+        self.close_calls += 1
 
 
 class FakeHTTPSConnection(object):
@@ -142,6 +151,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         FakeHTTPSConnection.instances = []
         FakeHTTPSConnection.response_bodies = ['{"ok": true}']
         FakeHTTPSConnection.response_statuses = []
+        FakeHTTPResponse.instances = []
         FakeHTTPResponse.read_sizes = []
         self.original_connection = fitbit.httplib.HTTPSConnection
         self.original_raw_input = getattr(fitbit, 'raw_input', None)
@@ -417,6 +427,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         self.assertIn('OAuth request failed with HTTP status 503', str(raised.exception))
         self.assertFalse(os.path.exists(fitbit.ACCESS_TOKEN_STRING_FNAME))
         self.assertEqual([], FakeOAuthToken.parsed_values)
+        self.assertEqual(1, FakeHTTPResponse.instances[0].close_calls)
 
     def test_rejects_failed_protected_resource_responses(self):
         fitbit.write_access_token_string('oauth_token=cached&oauth_token_secret=secret')
@@ -436,6 +447,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
             str(raised.exception),
         )
         self.assertNotIn('not authorized', str(raised.exception))
+        self.assertEqual(1, FakeHTTPResponse.instances[0].close_calls)
 
     def test_rejects_oversized_oauth_token_responses(self):
         oversized = 'oauth_token=secret&' + ('x' * fitbit.MAX_RESPONSE_BODY_BYTES)
@@ -454,6 +466,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         self.assertEqual([fitbit.MAX_RESPONSE_BODY_BYTES + 1], FakeHTTPResponse.read_sizes)
         self.assertEqual([], FakeOAuthToken.parsed_values)
         self.assertFalse(os.path.exists(fitbit.ACCESS_TOKEN_STRING_FNAME))
+        self.assertEqual(1, FakeHTTPResponse.instances[0].close_calls)
 
     def test_rejects_oversized_protected_resource_responses(self):
         fitbit.write_access_token_string('oauth_token=cached&oauth_token_secret=secret')
@@ -471,6 +484,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         self.assertIn('protected resource request response exceeds', str(raised.exception))
         self.assertNotIn('private-health-data', str(raised.exception))
         self.assertEqual([fitbit.MAX_RESPONSE_BODY_BYTES + 1], FakeHTTPResponse.read_sizes)
+        self.assertEqual(1, FakeHTTPResponse.instances[0].close_calls)
 
     def test_accepts_response_at_size_limit(self):
         body = 'x' * fitbit.MAX_RESPONSE_BODY_BYTES
@@ -478,6 +492,17 @@ class FitbitOAuthRequestTest(unittest.TestCase):
 
         self.assertEqual(body, fitbit.read_success_response(response, 'boundary test'))
         self.assertEqual([fitbit.MAX_RESPONSE_BODY_BYTES + 1], FakeHTTPResponse.read_sizes)
+        self.assertEqual(1, response.close_calls)
+
+    def test_closes_response_when_read_fails(self):
+        read_error = IOError('fixture read failure')
+        response = FakeHTTPResponse('', read_error=read_error)
+
+        with self.assertRaises(IOError) as raised:
+            fitbit.read_success_response(response, 'read failure test')
+
+        self.assertIs(read_error, raised.exception)
+        self.assertEqual(1, response.close_calls)
 
     def test_oauth_endpoints_use_https(self):
         self.assertEqual('https://api.fitbit.com/oauth/request_token', fitbit.REQUEST_TOKEN_URL)

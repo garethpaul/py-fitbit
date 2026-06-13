@@ -16,6 +16,7 @@ CI_PLANS = [
     ROOT / "docs" / "plans" / "2026-06-10-hosted-legacy-validation.md",
     ROOT / "docs" / "plans" / "2026-06-12-response-body-size-boundary.md",
     ROOT / "docs" / "plans" / "2026-06-12-credential-safe-output.md",
+    ROOT / "docs" / "plans" / "2026-06-13-response-close-contract.md",
 ]
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
 CODEOWNERS = ROOT / ".github" / "CODEOWNERS"
@@ -183,12 +184,25 @@ if (
 ):
     errors.append("fitbit.py must bound OAuth and protected response body reads")
 
+response_reader = re.search(
+    r"^def read_success_response\(.*?(?=^def |\Z)",
+    SOURCE,
+    flags=re.MULTILINE | re.DOTALL,
+)
+if not response_reader or not re.search(
+    r"finally:\s+response\.close\(\)", response_reader.group(0)
+):
+    errors.append("fitbit.py must close every attempted Fitbit response")
+
 for test_contract in [
     "test_rejects_oversized_oauth_token_responses",
     "test_rejects_oversized_protected_resource_responses",
     "test_accepts_response_at_size_limit",
     "FakeHTTPResponse.read_sizes",
     "fitbit.MAX_RESPONSE_BODY_BYTES + 1",
+    "test_closes_response_when_read_fails",
+    "FakeHTTPResponse.instances",
+    "response.close_calls",
 ]:
     if test_contract not in TEST_SOURCE:
         errors.append("legacy tests must preserve %s" % test_contract)
@@ -213,6 +227,8 @@ for document_name in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
     document = (ROOT / document_name).read_text()
     if "bounded response reads" not in document:
         errors.append("%s must document bounded response reads" % document_name)
+    if "response objects are closed" not in document:
+        errors.append("%s must document response object cleanup" % document_name)
 
 for document_name in ["README.md", "SECURITY.md", "CHANGES.md"]:
     document = (ROOT / document_name).read_text().lower()
