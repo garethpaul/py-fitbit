@@ -47,6 +47,8 @@ responses are rejected without copying their bodies into exception messages,
 where credential or health-data details could otherwise leak into logs.
 Both paths use bounded response reads of 1 MiB plus one detection byte so a bad
 endpoint cannot force an unbounded credential or health-data allocation.
+OAuth and protected-resource response objects are closed after every attempted
+read so rejected or failed responses do not retain connection resources.
 Interactive authorization does not print OAuth token secrets. Debug output is
 limited to request methods, response statuses, and response sizes so signed
 URLs and raw token response bodies do not persist in terminal or build logs.

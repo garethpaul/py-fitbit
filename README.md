@@ -71,6 +71,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   responses without including the upstream response body in the exception.
 - OAuth and protected-resource paths use bounded response reads of 1 MiB plus
   one detection byte and reject oversized credential or health-data payloads.
+- OAuth and protected-resource response objects are closed after every read
+  attempt, including status, size, and transport failures.
 - Interactive authorization never prints OAuth token secrets. Optional debug
   output reports only request methods, response statuses, and response sizes;
   it does not print signed URLs or raw token response bodies.
@@ -146,6 +148,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   resource response status validation.
 - See `docs/plans/2026-06-12-response-body-size-boundary.md` for bounded
   response reads across OAuth and protected-resource requests.
+- See `docs/plans/2026-06-13-response-close-contract.md` for deterministic
+  response cleanup across success and failure paths.
 
 ## Contributing
 

@@ -30,6 +30,8 @@ Priority:
 - Reject failed OAuth and protected-resource HTTP responses before parsing or
   returning their bodies
 - Keep bounded response reads on OAuth and protected-resource payloads
+- Ensure OAuth and protected-resource response objects are closed after every
+  attempted read
 - Keep protected resource calls constrained to Fitbit API paths
 - Reject raw whitespace inside protected resource API paths
 - Reject URL fragments inside protected resource API paths
