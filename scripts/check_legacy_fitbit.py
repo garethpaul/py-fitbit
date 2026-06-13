@@ -17,6 +17,7 @@ CI_PLANS = [
     ROOT / "docs" / "plans" / "2026-06-12-response-body-size-boundary.md",
     ROOT / "docs" / "plans" / "2026-06-12-credential-safe-output.md",
     ROOT / "docs" / "plans" / "2026-06-13-response-close-contract.md",
+    ROOT / "docs" / "plans" / "2026-06-13-token-cache-symlink-guard.md",
 ]
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
 CODEOWNERS = ROOT / ".github" / "CODEOWNERS"
@@ -146,6 +147,25 @@ if (
     or "stat.S_IRWXO" not in SOURCE
 ):
     errors.append("fitbit.py must reject access_token.string with group or other permissions")
+
+for token_cache_contract in [
+    "os.O_NOFOLLOW",
+    "os.lstat(fname)",
+    "stat.S_ISLNK",
+    "os.fstat(fd)",
+    "access token cache must not be a symbolic link",
+]:
+    if token_cache_contract not in SOURCE:
+        errors.append("fitbit.py must preserve token-cache symlink guard %s" % token_cache_contract)
+
+for token_cache_test_contract in [
+    "test_access_token_cache_rejects_symbolic_links",
+    "os.symlink(target, fitbit.ACCESS_TOKEN_STRING_FNAME)",
+    "self.assertEqual('target-must-remain-unchanged', token_file.read())",
+    "fitbit.write_access_token_string('replacement-secret')",
+]:
+    if token_cache_test_contract not in TEST_SOURCE:
+        errors.append("legacy tests must preserve token-cache symlink regression %s" % token_cache_test_contract)
 
 if "validate_api_call" not in SOURCE:
     errors.append("fitbit.py must validate protected Fitbit API paths")

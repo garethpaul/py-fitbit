@@ -2,6 +2,8 @@
 
 ## 2026-06-13
 
+- Rejected symbolic-link token caches for reads and writes and moved owner-only
+  read permission checks onto the opened file descriptor.
 - Ensured OAuth and protected-resource response objects are closed after every
   bounded read attempt, including status, size, and read failures.
 
