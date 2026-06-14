@@ -1,6 +1,6 @@
 # Make Legacy Verification Location Independent
 
-Status: Planned
+Status: Completed
 
 ## Context
 
@@ -32,8 +32,20 @@ gate.
 - workflow parsing, exact-base protected-file comparison, secret and
   generated-artifact scans, and `git diff --check`
 
-## Work Planned
+## Work Completed
 
-- Add an override-protected absolute repository root to the Makefile.
-- Root docs, Python 2 compilation, Python 3 checking, and Python 2 tests.
-- Extend the legacy checker with exact Make and completed-plan contracts.
+- Added an override-protected absolute repository root to the Makefile.
+- Rooted docs, Python 2 compilation, Python 3 checking, and Python 2 tests.
+- Extended the legacy checker with exact Make and completed-plan contracts.
+
+## Verification Results
+
+- Every Make alias passed from both the repository root and an unrelated
+  directory with `REPO_ROOT=/tmp` supplied on the command line.
+- Full root and external `make check` runs passed in the network-disabled,
+  digest-pinned Python 2.7.18 container with a read-only source mount; all 17
+  mocked tests passed in each run.
+- Five hostile mutations rejected removal of override protection and every
+  rooted executable recipe.
+- Workflow YAML parsing, exact-base protected-file comparison, secret and
+  generated-artifact scans, and `git diff --check` passed.
