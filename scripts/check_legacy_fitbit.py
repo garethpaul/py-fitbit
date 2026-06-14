@@ -19,6 +19,7 @@ CI_PLANS = [
     ROOT / "docs" / "plans" / "2026-06-13-response-close-contract.md",
     ROOT / "docs" / "plans" / "2026-06-13-token-cache-symlink-guard.md",
     ROOT / "docs" / "plans" / "2026-06-13-https-connection-close.md",
+    ROOT / "docs" / "plans" / "2026-06-14-location-independent-make.md",
 ]
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
 CODEOWNERS = ROOT / ".github" / "CODEOWNERS"
@@ -56,6 +57,21 @@ for evidence in [
     if evidence not in connection_close_plan:
         errors.append(
             "HTTPS connection close plan must preserve verification evidence %s"
+            % evidence
+        )
+
+location_independent_make_plan = (
+    ROOT / "docs" / "plans" / "2026-06-14-location-independent-make.md"
+).read_text()
+for evidence in [
+    "unrelated directory",
+    "digest-pinned Python 2.7.18 container",
+    "hostile mutations rejected",
+    "`git diff --check`",
+]:
+    if evidence not in location_independent_make_plan:
+        errors.append(
+            "Location-independent Make plan must preserve verification evidence %s"
             % evidence
         )
 
@@ -104,6 +120,16 @@ if "GitHub Actions" not in README:
 
 if "command -v python2" in MAKEFILE or "Skipping legacy Python 2" in MAKEFILE:
     errors.append("Makefile must require Python 2 checks instead of skipping them")
+
+for make_contract in [
+    "override REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))",
+    '\t@cd "$(REPO_ROOT)" && for plan in docs/plans/*.md; do \\\n',
+    '\tcd "$(REPO_ROOT)" && python2 -c "import py_compile;',
+    '\tcd "$(REPO_ROOT)" && python3 scripts/check_legacy_fitbit.py\n',
+    '\tcd "$(REPO_ROOT)" && PYTHONDONTWRITEBYTECODE=1 python2 tests/test_fitbit_oauth_request.py\n',
+]:
+    if make_contract not in MAKEFILE:
+        errors.append("Makefile must preserve rooted recipe %s" % make_contract.strip())
 
 if "__pycache__/" not in GITIGNORE_LINES:
     errors.append(".gitignore must ignore __pycache__/")
