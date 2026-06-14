@@ -1,6 +1,6 @@
 # Reject Dangling Token Cache Symlinks Before Network Access
 
-Status: In Progress
+Status: Completed
 
 ## Context
 
@@ -10,8 +10,8 @@ OAuth flow before the later cache write rejects the symlink.
 
 ## Objectives
 
-- Reject any access-token cache symlink before testing whether the cache
-  exists.
+- Include dangling access-token cache symlinks in the cache-existence branch so
+  the existing read guard rejects them before network access.
 - Prove dangling symlinks fail before OAuth request construction or HTTPS
   connection creation.
 - Preserve regular-file cache reads, owner-only permissions, and interactive
@@ -32,3 +32,24 @@ OAuth flow before the later cache write rejects the symlink.
 - hostile mutations covering preflight order, regression coverage, no-network
   proof, documentation, and completed-plan evidence
 - exact diff, generated-artifact, and credential-pattern audits
+
+## Work Completed
+
+- Switched the cache-existence branch to `os.path.lexists` so dangling
+  token-cache symlinks reach the existing read guard before network access.
+- Confirmed dangling token-cache symlinks fail without OAuth request or HTTPS
+  connection creation.
+- Added a dangling token-cache symlink regression that proves no OAuth request
+  or HTTPS connection is created.
+- Extended the deterministic checker and canonical documentation with the
+  preflight-order contract.
+
+## Verification Results
+
+- All 18 Python 2 tests passed, including the focused dangling-symlink case.
+- Python 2 source compilation and the Python 3 static checker passed.
+- Root and external-directory `make check` runs passed.
+- Hostile mutations covering preflight order, regression coverage, no-network
+  proof, documentation, and completed-plan evidence were rejected.
+- Exact diff, generated-artifact, and credential-pattern audits found no
+  unintended files or likely secrets.

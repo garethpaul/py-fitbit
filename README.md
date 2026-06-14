@@ -116,7 +116,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   readable-by-other cache files are rejected before network requests are
   opened.
 - Token-cache reads and writes reject symbolic links, and read permissions are
-  checked on the opened file descriptor.
+  checked on the opened file descriptor. All dangling token-cache symlinks are
+  included in cache existence checks and rejected before network access.
 
 ## Maintenance Notes
 

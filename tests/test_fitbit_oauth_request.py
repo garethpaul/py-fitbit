@@ -305,6 +305,18 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         with open(target) as token_file:
             self.assertEqual('target-must-remain-unchanged', token_file.read())
 
+    def test_rejects_dangling_access_token_cache_symlink_before_network(self):
+        if not hasattr(os, 'symlink'):
+            self.skipTest('symbolic links are unavailable')
+
+        os.symlink('missing-token-target.string', fitbit.ACCESS_TOKEN_STRING_FNAME)
+
+        with self.assertRaises(ValueError):
+            fitbit.fitbit('/1/user/-/profile.json')
+
+        self.assertEqual([], FakeOAuthRequest.created)
+        self.assertEqual([], FakeHTTPSConnection.instances)
+
     def test_rejects_readable_access_token_cache_before_network(self):
         token_string = 'oauth_token=cached&oauth_token_secret=secret'
         with open(fitbit.ACCESS_TOKEN_STRING_FNAME, 'w') as token_file:

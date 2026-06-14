@@ -150,7 +150,7 @@ def fitbit(api_call):
    connection = None
    try:
       # if local does not exist
-      if not os.path.exists(ACCESS_TOKEN_STRING_FNAME):
+      if not os.path.lexists(ACCESS_TOKEN_STRING_FNAME):
          connection = httplib.HTTPSConnection(SERVER)
          # obtain token to get request
          print '* Obtain a request token ...'

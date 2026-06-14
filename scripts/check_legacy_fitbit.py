@@ -270,6 +270,27 @@ if not fitbit_function or not re.search(
     flags=re.DOTALL,
 ):
     errors.append("fitbit.py must close each created HTTPS connection when the call exits")
+if not fitbit_function or "if not os.path.lexists(ACCESS_TOKEN_STRING_FNAME):" not in fitbit_function.group(0):
+    errors.append("fitbit.py must include dangling token-cache symlinks in cache existence checks")
+
+dangling_symlink_test = re.search(
+    r"^    def test_rejects_dangling_access_token_cache_symlink_before_network\(.*?(?=^    def |\Z)",
+    TEST_SOURCE,
+    flags=re.MULTILINE | re.DOTALL,
+)
+for dangling_symlink_test_contract in [
+    "missing-token-target.string",
+    "self.assertEqual([], FakeOAuthRequest.created)",
+    "self.assertEqual([], FakeHTTPSConnection.instances)",
+]:
+    if (
+        not dangling_symlink_test
+        or dangling_symlink_test_contract not in dangling_symlink_test.group(0)
+    ):
+        errors.append(
+            "legacy tests must preserve dangling token-cache symlink contract %s"
+            % dangling_symlink_test_contract
+        )
 
 for connection_test_contract in [
     "self.close_calls = 0",
@@ -325,6 +346,18 @@ for document_name in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
         errors.append("%s must document response object cleanup" % document_name)
     if "HTTPS connections are closed" not in document:
         errors.append("%s must document HTTPS connection cleanup" % document_name)
+    if "dangling token-cache symlinks" not in document:
+        errors.append("%s must document dangling token-cache symlink rejection" % document_name)
+
+dangling_symlink_plan = (
+    ROOT / "docs" / "plans" / "2026-06-14-dangling-token-cache-symlink.md"
+)
+if (
+    "Status: Completed" not in dangling_symlink_plan.read_text()
+    or "dangling token-cache symlinks" not in dangling_symlink_plan.read_text()
+    or "make check" not in dangling_symlink_plan.read_text()
+):
+    errors.append("dangling token-cache symlink plan must record completed verification")
 
 for document_name in ["README.md", "SECURITY.md", "CHANGES.md"]:
     document = (ROOT / document_name).read_text().lower()

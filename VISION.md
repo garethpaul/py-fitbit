@@ -41,6 +41,7 @@ Priority:
   paths
 - Reject credential query parameters inside protected resource API paths
 - Keep OAuth endpoints pinned to HTTPS
+- Include dangling token-cache symlinks in cache existence checks
 - Keep legacy verification from leaving Python bytecode in the repository tree
 - Run the complete legacy gate in digest-pinned hosted Python 2.7 without
   skipping mocked OAuth coverage
