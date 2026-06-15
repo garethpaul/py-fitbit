@@ -20,6 +20,7 @@ CI_PLANS = [
     ROOT / "docs" / "plans" / "2026-06-13-token-cache-symlink-guard.md",
     ROOT / "docs" / "plans" / "2026-06-13-https-connection-close.md",
     ROOT / "docs" / "plans" / "2026-06-14-location-independent-make.md",
+    ROOT / "docs" / "plans" / "2026-06-15-regular-token-cache-boundary.md",
 ]
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
 CODEOWNERS = ROOT / ".github" / "CODEOWNERS"
@@ -195,19 +196,70 @@ if (
 
 for token_cache_contract in [
     "os.O_NOFOLLOW",
+    "os.O_NONBLOCK",
     "os.lstat(fname)",
     "stat.S_ISLNK",
+    "stat.S_ISREG",
     "os.fstat(fd)",
     "access token cache must not be a symbolic link",
+    "access token cache must be a regular file",
 ]:
     if token_cache_contract not in SOURCE:
         errors.append("fitbit.py must preserve token-cache symlink guard %s" % token_cache_contract)
+
+token_cache_flags_function = re.search(
+    r"^def token_cache_flags\(.*?(?=^def |\Z)",
+    SOURCE,
+    flags=re.MULTILINE | re.DOTALL,
+)
+if not token_cache_flags_function or "os.O_NONBLOCK" not in token_cache_flags_function.group(0):
+    errors.append("token-cache opens must use O_NONBLOCK when available")
+
+token_cache_preflight = re.search(
+    r"^def reject_unsafe_token_cache_path\(.*?(?=^def |\Z)",
+    SOURCE,
+    flags=re.MULTILINE | re.DOTALL,
+)
+for preflight_contract in ["os.lstat(fname)", "stat.S_ISLNK", "stat.S_ISREG"]:
+    if not token_cache_preflight or preflight_contract not in token_cache_preflight.group(0):
+        errors.append("token-cache path preflight must preserve %s" % preflight_contract)
+
+token_cache_descriptor = re.search(
+    r"^def token_cache_descriptor_mode\(.*?(?=^def |\Z)",
+    SOURCE,
+    flags=re.MULTILINE | re.DOTALL,
+)
+for descriptor_contract in ["os.fstat(fd)", "stat.S_ISREG"]:
+    if not token_cache_descriptor or descriptor_contract not in token_cache_descriptor.group(0):
+        errors.append("token-cache descriptor validation must preserve %s" % descriptor_contract)
+
+for function_name in ["read_access_token_string", "write_access_token_string"]:
+    token_function = re.search(
+        r"^def %s\(.*?(?=^def |\Z)" % function_name,
+        SOURCE,
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    for function_contract in [
+        "reject_unsafe_token_cache_path(fname)",
+        "token_cache_descriptor_mode(fd)",
+    ]:
+        if not token_function or function_contract not in token_function.group(0):
+            errors.append("%s must preserve %s" % (function_name, function_contract))
+    if not re.search(
+        r"^def %s\([^\n]*\):\n   reject_unsafe_token_cache_path\(fname\)" % function_name,
+        SOURCE,
+        flags=re.MULTILINE,
+    ):
+        errors.append("%s must preflight the cache path before open" % function_name)
 
 for token_cache_test_contract in [
     "test_access_token_cache_rejects_symbolic_links",
     "os.symlink(target, fitbit.ACCESS_TOKEN_STRING_FNAME)",
     "self.assertEqual('target-must-remain-unchanged', token_file.read())",
     "fitbit.write_access_token_string('replacement-secret')",
+    "test_access_token_cache_rejects_non_regular_files",
+    "test_rejects_fifo_access_token_cache_before_network",
+    "os.mkfifo(fitbit.ACCESS_TOKEN_STRING_FNAME, 0600)",
 ]:
     if token_cache_test_contract not in TEST_SOURCE:
         errors.append("legacy tests must preserve token-cache symlink regression %s" % token_cache_test_contract)
@@ -292,6 +344,41 @@ for dangling_symlink_test_contract in [
             % dangling_symlink_test_contract
         )
 
+fifo_test = re.search(
+    r"^    def test_rejects_fifo_access_token_cache_before_network\(.*?(?=^    def |\Z)",
+    TEST_SOURCE,
+    flags=re.MULTILINE | re.DOTALL,
+)
+for fifo_test_contract in [
+    "access token cache must be a regular file",
+    "self.assertEqual([], FakeOAuthRequest.created)",
+    "self.assertEqual([], FakeHTTPSConnection.instances)",
+]:
+    if not fifo_test or fifo_test_contract not in fifo_test.group(0):
+        errors.append(
+            "legacy tests must preserve FIFO token-cache contract %s"
+            % fifo_test_contract
+        )
+
+non_regular_test = re.search(
+    r"^    def test_access_token_cache_rejects_non_regular_files\(.*?(?=^    def |\Z)",
+    TEST_SOURCE,
+    flags=re.MULTILINE | re.DOTALL,
+)
+for non_regular_test_contract in [
+    "fitbit.read_access_token_string()",
+    "fitbit.write_access_token_string('replacement-secret')",
+    "access token cache must be a regular file",
+]:
+    if (
+        not non_regular_test
+        or non_regular_test_contract not in non_regular_test.group(0)
+    ):
+        errors.append(
+            "legacy tests must preserve non-regular token-cache contract %s"
+            % non_regular_test_contract
+        )
+
 for connection_test_contract in [
     "self.close_calls = 0",
     "def close(self):",
@@ -348,6 +435,8 @@ for document_name in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
         errors.append("%s must document HTTPS connection cleanup" % document_name)
     if "dangling token-cache symlinks" not in document:
         errors.append("%s must document dangling token-cache symlink rejection" % document_name)
+    if "non-regular token-cache paths" not in document:
+        errors.append("%s must document non-regular token-cache path rejection" % document_name)
 
 dangling_symlink_plan = (
     ROOT / "docs" / "plans" / "2026-06-14-dangling-token-cache-symlink.md"
@@ -358,6 +447,17 @@ if (
     or "make check" not in dangling_symlink_plan.read_text()
 ):
     errors.append("dangling token-cache symlink plan must record completed verification")
+
+regular_cache_plan = (
+    ROOT / "docs" / "plans" / "2026-06-15-regular-token-cache-boundary.md"
+)
+if (
+    "Status: Completed" not in regular_cache_plan.read_text()
+    or "non-regular token-cache paths" not in regular_cache_plan.read_text()
+    or "hostile mutations" not in regular_cache_plan.read_text()
+    or "make check" not in regular_cache_plan.read_text()
+):
+    errors.append("regular token-cache plan must record completed verification")
 
 for document_name in ["README.md", "SECURITY.md", "CHANGES.md"]:
     document = (ROOT / document_name).read_text().lower()

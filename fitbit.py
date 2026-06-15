@@ -29,27 +29,39 @@ CREDENTIAL_QUERY_PARAMETERS = set([
 def token_cache_flags(flags):
    if hasattr(os, 'O_NOFOLLOW'):
       flags |= os.O_NOFOLLOW
+   if hasattr(os, 'O_NONBLOCK'):
+      flags |= os.O_NONBLOCK
    return flags
 
 
-def reject_token_cache_symlink(fname):
+def reject_unsafe_token_cache_path(fname):
    try:
-      if stat.S_ISLNK(os.lstat(fname).st_mode):
+      mode = os.lstat(fname).st_mode
+      if stat.S_ISLNK(mode):
          raise ValueError('access token cache must not be a symbolic link')
+      if not stat.S_ISREG(mode):
+         raise ValueError('access token cache must be a regular file')
    except OSError as error:
       if error.errno != errno.ENOENT:
          raise
 
 
+def token_cache_descriptor_mode(fd):
+   mode = os.fstat(fd).st_mode
+   if not stat.S_ISREG(mode):
+      raise ValueError('access token cache must be a regular file')
+   return stat.S_IMODE(mode)
+
+
 def read_access_token_string(fname=ACCESS_TOKEN_STRING_FNAME):
-   reject_token_cache_symlink(fname)
+   reject_unsafe_token_cache_path(fname)
    try:
       fd = os.open(fname, token_cache_flags(os.O_RDONLY))
    except OSError:
-      reject_token_cache_symlink(fname)
+      reject_unsafe_token_cache_path(fname)
       raise
    try:
-      mode = stat.S_IMODE(os.fstat(fd).st_mode)
+      mode = token_cache_descriptor_mode(fd)
       if mode & (stat.S_IRWXG | stat.S_IRWXO):
          raise ValueError('access token cache must be owner-only')
       fobj = os.fdopen(fd)
@@ -64,7 +76,7 @@ def read_access_token_string(fname=ACCESS_TOKEN_STRING_FNAME):
 
 
 def write_access_token_string(access_token_string, fname=ACCESS_TOKEN_STRING_FNAME):
-   reject_token_cache_symlink(fname)
+   reject_unsafe_token_cache_path(fname)
    try:
       fd = os.open(
          fname,
@@ -72,9 +84,10 @@ def write_access_token_string(access_token_string, fname=ACCESS_TOKEN_STRING_FNA
          0600,
       )
    except OSError:
-      reject_token_cache_symlink(fname)
+      reject_unsafe_token_cache_path(fname)
       raise
    try:
+      token_cache_descriptor_mode(fd)
       if hasattr(os, 'fchmod'):
          os.fchmod(fd, 0600)
       else:

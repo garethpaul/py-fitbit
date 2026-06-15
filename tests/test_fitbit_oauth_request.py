@@ -305,6 +305,39 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         with open(target) as token_file:
             self.assertEqual('target-must-remain-unchanged', token_file.read())
 
+    def test_access_token_cache_rejects_non_regular_files(self):
+        if not hasattr(os, 'mkfifo'):
+            self.skipTest('FIFOs are unavailable')
+
+        os.mkfifo(fitbit.ACCESS_TOKEN_STRING_FNAME, 0600)
+
+        for operation in [
+            lambda: fitbit.read_access_token_string(),
+            lambda: fitbit.write_access_token_string('replacement-secret'),
+        ]:
+            with self.assertRaises(ValueError) as raised:
+                operation()
+            self.assertEqual(
+                'access token cache must be a regular file',
+                str(raised.exception),
+            )
+
+    def test_rejects_fifo_access_token_cache_before_network(self):
+        if not hasattr(os, 'mkfifo'):
+            self.skipTest('FIFOs are unavailable')
+
+        os.mkfifo(fitbit.ACCESS_TOKEN_STRING_FNAME, 0600)
+
+        with self.assertRaises(ValueError) as raised:
+            fitbit.fitbit('/1/user/-/profile.json')
+
+        self.assertEqual(
+            'access token cache must be a regular file',
+            str(raised.exception),
+        )
+        self.assertEqual([], FakeOAuthRequest.created)
+        self.assertEqual([], FakeHTTPSConnection.instances)
+
     def test_rejects_dangling_access_token_cache_symlink_before_network(self):
         if not hasattr(os, 'symlink'):
             self.skipTest('symbolic links are unavailable')

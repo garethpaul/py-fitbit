@@ -6,6 +6,8 @@
   read permission checks onto the opened file descriptor.
 - Included dangling token-cache symlinks in cache existence checks so existing
   read guards reject them before network access.
+- Rejected non-regular token-cache paths before open and required the opened
+  descriptor to remain a regular file.
 - Ensured OAuth and protected-resource response objects are closed after every
   bounded read attempt, including status, size, and read failures.
 - Ensured created HTTPS connections are closed exactly once after cached-token

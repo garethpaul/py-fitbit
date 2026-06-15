@@ -45,6 +45,8 @@ network connection. Token-cache reads and writes reject symbolic links, and
 read permissions are validated on the opened descriptor rather than a separate
 pathname lookup. All dangling token-cache symlinks are rejected before cache
 network access because cache existence checks do not follow symlink targets.
+Existing non-regular token-cache paths are rejected before open, and descriptor
+validation prevents a path race from substituting a special file for the cache.
 OAuth token and protected resource responses must use a 2xx HTTP status. Error
 responses are rejected without copying their bodies into exception messages,
 where credential or health-data details could otherwise leak into logs.
