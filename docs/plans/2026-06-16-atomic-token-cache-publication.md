@@ -1,6 +1,6 @@
 # Atomic Token Cache Publication
 
-Status: Planned
+Status: Completed
 
 ## Context
 
@@ -75,3 +75,31 @@ also overwrite the target of an otherwise regular hard link.
   `O_NOFOLLOW`, `O_NONBLOCK`, and descriptor-oriented cache protections.
 - Failures after replacement cannot restore the prior directory entry and are
   outside this change's preservation guarantee.
+
+## Work Completed
+
+- Replaced direct live-cache truncation with a same-directory `0600` staging
+  descriptor that is validated, written, flushed, and fsynced before publish.
+- Rechecked the destination path policy and atomically renamed the complete
+  staging file over the selected cache entry.
+- Added handled-failure cleanup limited to the unpublished staging path.
+- Added executable regressions proving an injected write failure preserves the
+  last valid cache and a hard-linked target remains byte-for-byte unchanged.
+- Added static runtime, regression, documentation, changelog, and completed-plan
+  contracts.
+
+## Verification Results
+
+- All 22 focused Python 2.7 tests passed, including write-failure preservation,
+  hard-link isolation, owner-only mode, symlink, special-file, and no-network
+  scenarios.
+- Root and external-directory `make check` passed Python 2 compilation, the
+  Python 3 static contracts, all mocked OAuth tests, and completed-plan checks.
+- The complete gate passed in the network-disabled, read-only, digest-pinned
+  `python:2.7.18` container used by hosted validation.
+- Hostile mutations restoring live-cache truncation or removing staging,
+  fsync, rename, failure preservation, hard-link isolation, cleanup, or
+  completed evidence were rejected.
+- Final diff, bytecode, temporary-artifact, credential-pattern, conflict,
+  dependency, workflow, mode, binary, and large-file audits passed without
+  unrelated changes.

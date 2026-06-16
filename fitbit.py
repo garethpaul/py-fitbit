@@ -1,7 +1,7 @@
 """
 A Python library for accessing the FitBit API.
 """
-import errno, os, httplib, stat
+import errno, os, httplib, stat, tempfile
 import urlparse
 from oauth import oauth 
 import json
@@ -77,29 +77,42 @@ def read_access_token_string(fname=ACCESS_TOKEN_STRING_FNAME):
 
 def write_access_token_string(access_token_string, fname=ACCESS_TOKEN_STRING_FNAME):
    reject_unsafe_token_cache_path(fname)
-   try:
-      fd = os.open(
-         fname,
-         token_cache_flags(os.O_WRONLY | os.O_CREAT | os.O_TRUNC),
-         0600,
-      )
-   except OSError:
-      reject_unsafe_token_cache_path(fname)
-      raise
+   cache_directory = os.path.dirname(os.path.abspath(fname))
+   cache_prefix = '.%s.' % os.path.basename(fname)
+   fd, staged_fname = tempfile.mkstemp(prefix=cache_prefix, dir=cache_directory)
+   fobj = None
    try:
       token_cache_descriptor_mode(fd)
       if hasattr(os, 'fchmod'):
          os.fchmod(fd, 0600)
       else:
-         os.chmod(fname, 0600)
+         os.chmod(staged_fname, 0600)
       fobj = os.fdopen(fd, 'w')
-   except:
-      os.close(fd)
-      raise
-   try:
-      fobj.write(access_token_string)
+      fd = None
+      try:
+         fobj.write(access_token_string)
+         fobj.flush()
+         os.fsync(fobj.fileno())
+      finally:
+         try:
+            fobj.close()
+         finally:
+            fobj = None
+
+      reject_unsafe_token_cache_path(fname)
+      os.rename(staged_fname, fname)
+      staged_fname = None
    finally:
-      fobj.close()
+      if fobj is not None:
+         fobj.close()
+      if fd is not None:
+         os.close(fd)
+      if staged_fname is not None:
+         try:
+            os.unlink(staged_fname)
+         except OSError as error:
+            if error.errno != errno.ENOENT:
+               raise
 
 
 def validate_api_call(api_call):

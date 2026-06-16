@@ -43,6 +43,8 @@ Priority:
 - Keep OAuth endpoints pinned to HTTPS
 - Include dangling token-cache symlinks in cache existence checks
 - Reject non-regular token-cache paths before OAuth or HTTPS work
+- Publish refreshed token caches atomically without truncating the last valid
+  value or overwriting a hard-linked target
 - Keep legacy verification from leaving Python bytecode in the repository tree
 - Run the complete legacy gate in digest-pinned hosted Python 2.7 without
   skipping mocked OAuth coverage

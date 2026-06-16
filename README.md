@@ -120,6 +120,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   included in cache existence checks and rejected before network access.
 - Existing non-regular token-cache paths are rejected before open, and the
   opened descriptor must still identify a regular file before token access.
+- Token refreshes write and fsync an owner-only staging file in the cache
+  directory, then atomically replace the cache so handled write failures keep
+  the last valid token and hard-linked targets are not overwritten.
 
 ## Maintenance Notes
 

@@ -287,6 +287,58 @@ class FitbitOAuthRequestTest(unittest.TestCase):
             fitbit.read_access_token_string(),
         )
 
+    def test_failed_token_cache_write_preserves_last_good_value(self):
+        last_good = 'oauth_token=last-good&oauth_token_secret=preserved'
+        with open(fitbit.ACCESS_TOKEN_STRING_FNAME, 'w') as token_file:
+            token_file.write(last_good)
+        os.chmod(fitbit.ACCESS_TOKEN_STRING_FNAME, 0600)
+
+        original_fdopen = fitbit.os.fdopen
+
+        class FailingWriter(object):
+            def __init__(self, fd):
+                self.fd = fd
+
+            def write(self, _value):
+                raise IOError('simulated token-cache write failure')
+
+            def close(self):
+                os.close(self.fd)
+
+        try:
+            fitbit.os.fdopen = lambda fd, _mode: FailingWriter(fd)
+            with self.assertRaises(IOError):
+                fitbit.write_access_token_string('replacement-secret')
+        finally:
+            fitbit.os.fdopen = original_fdopen
+
+        with open(fitbit.ACCESS_TOKEN_STRING_FNAME) as token_file:
+            self.assertEqual(last_good, token_file.read())
+        self.assertEqual([fitbit.ACCESS_TOKEN_STRING_FNAME], os.listdir('.'))
+
+    def test_token_cache_write_replaces_hard_link_without_modifying_target(self):
+        if not hasattr(os, 'link'):
+            self.skipTest('hard links are unavailable')
+
+        target = 'linked-token-target.string'
+        last_good = 'oauth_token=linked&oauth_token_secret=preserved'
+        replacement = 'oauth_token=new&oauth_token_secret=new'
+        with open(target, 'w') as token_file:
+            token_file.write(last_good)
+        os.chmod(target, 0600)
+        os.link(target, fitbit.ACCESS_TOKEN_STRING_FNAME)
+
+        fitbit.write_access_token_string(replacement)
+
+        with open(target) as token_file:
+            self.assertEqual(last_good, token_file.read())
+        with open(fitbit.ACCESS_TOKEN_STRING_FNAME) as token_file:
+            self.assertEqual(replacement, token_file.read())
+        self.assertNotEqual(
+            os.stat(target).st_ino,
+            os.stat(fitbit.ACCESS_TOKEN_STRING_FNAME).st_ino,
+        )
+
     def test_access_token_cache_rejects_symbolic_links(self):
         if not hasattr(os, 'symlink'):
             self.skipTest('symbolic links are unavailable')

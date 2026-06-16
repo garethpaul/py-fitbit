@@ -21,6 +21,7 @@ CI_PLANS = [
     ROOT / "docs" / "plans" / "2026-06-13-https-connection-close.md",
     ROOT / "docs" / "plans" / "2026-06-14-location-independent-make.md",
     ROOT / "docs" / "plans" / "2026-06-15-regular-token-cache-boundary.md",
+    ROOT / "docs" / "plans" / "2026-06-16-atomic-token-cache-publication.md",
 ]
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
 CODEOWNERS = ROOT / ".github" / "CODEOWNERS"
@@ -252,6 +253,28 @@ for function_name in ["read_access_token_string", "write_access_token_string"]:
     ):
         errors.append("%s must preflight the cache path before open" % function_name)
 
+token_cache_writer = re.search(
+    r"^def write_access_token_string\(.*?(?=^def |\Z)",
+    SOURCE,
+    flags=re.MULTILINE | re.DOTALL,
+)
+for publication_contract in [
+    "tempfile.mkstemp",
+    "fobj.flush()",
+    "os.fsync(fobj.fileno())",
+    "os.rename(staged_fname, fname)",
+    "os.unlink(staged_fname)",
+]:
+    if not token_cache_writer or publication_contract not in token_cache_writer.group(0):
+        errors.append("token-cache publication must preserve %s" % publication_contract)
+if token_cache_writer and "os.O_TRUNC" in token_cache_writer.group(0):
+    errors.append("token-cache publication must not truncate the live cache")
+if (
+    token_cache_writer
+    and token_cache_writer.group(0).count("reject_unsafe_token_cache_path(fname)") < 2
+):
+    errors.append("token-cache publication must recheck the destination before rename")
+
 for token_cache_test_contract in [
     "test_access_token_cache_rejects_symbolic_links",
     "os.symlink(target, fitbit.ACCESS_TOKEN_STRING_FNAME)",
@@ -260,9 +283,14 @@ for token_cache_test_contract in [
     "test_access_token_cache_rejects_non_regular_files",
     "test_rejects_fifo_access_token_cache_before_network",
     "os.mkfifo(fitbit.ACCESS_TOKEN_STRING_FNAME, 0600)",
+    "test_failed_token_cache_write_preserves_last_good_value",
+    "self.assertEqual(last_good, token_file.read())",
+    "self.assertEqual([fitbit.ACCESS_TOKEN_STRING_FNAME], os.listdir('.'))",
+    "test_token_cache_write_replaces_hard_link_without_modifying_target",
+    "self.assertNotEqual(",
 ]:
     if token_cache_test_contract not in TEST_SOURCE:
-        errors.append("legacy tests must preserve token-cache symlink regression %s" % token_cache_test_contract)
+        errors.append("legacy tests must preserve token-cache regression %s" % token_cache_test_contract)
 
 if "validate_api_call" not in SOURCE:
     errors.append("fitbit.py must validate protected Fitbit API paths")

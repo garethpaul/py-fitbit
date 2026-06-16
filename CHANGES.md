@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-16
+
+- Published refreshed OAuth token caches through a same-directory staged write
+  and atomic rename so handled write failures preserve the last valid token and
+  hard-linked targets remain unchanged.
+
 ## 2026-06-13
 
 - Rejected symbolic-link token caches for reads and writes and moved owner-only
