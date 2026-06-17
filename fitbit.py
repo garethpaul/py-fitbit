@@ -53,6 +53,16 @@ def token_cache_descriptor_mode(fd):
    return stat.S_IMODE(mode)
 
 
+def contains_dot_path_segment(path):
+   while True:
+      if any(segment in ('.', '..') for segment in path.split('/')):
+         return True
+      decoded_path = urlparse.unquote(path)
+      if decoded_path == path:
+         return False
+      path = decoded_path
+
+
 def read_access_token_string(fname=ACCESS_TOKEN_STRING_FNAME):
    reject_unsafe_token_cache_path(fname)
    try:
@@ -130,8 +140,7 @@ def validate_api_call(api_call):
    if '#' in api_call:
       raise ValueError('api_call must not contain a fragment')
 
-   path_segments = urlparse.urlsplit(api_call).path.split('/')
-   if any(urlparse.unquote(segment) in ('.', '..') for segment in path_segments):
+   if contains_dot_path_segment(urlparse.urlsplit(api_call).path):
       raise ValueError('api_call must not contain dot segments')
 
    for name, _value in urlparse.parse_qsl(

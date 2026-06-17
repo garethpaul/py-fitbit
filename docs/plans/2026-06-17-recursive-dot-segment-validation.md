@@ -1,6 +1,6 @@
 # Recursive Dot-Segment Validation
 
-Status: Planned
+Status: Completed
 
 ## Context
 
@@ -93,3 +93,28 @@ Approach:
 - Repeated decoding must terminate on malformed or stable percent sequences.
 - Valid percent-encoded non-traversal path data must remain accepted and must be
   sent without normalization.
+
+## Work Completed
+
+- Added fixed-point percent-decoding of the complete protected-resource path and
+  rejected exact `.` or `..` segments at every decoded layer.
+- Split each decoded full path so encoded separators expose traversal segments,
+  while preserving the original validated API call for OAuth signing and HTTP.
+- Added double-encoded and encoded-separator rejection cases, a valid encoded
+  filename preservation regression, scoped static contracts, and synchronized
+  security and maintenance guidance.
+
+## Verification Results
+
+- Python 2.7 passed all 23 mocked OAuth, path-validation, response, connection,
+  and token-cache tests; the Python 3 legacy safety checker passed.
+- A complete isolated `make check` passed before the plan was marked completed.
+- Repository-root `make check` and the absolute-Makefile gate from `/tmp` passed
+  the complete Python 2.7 and Python 3 verification flow.
+- Nine isolated hostile mutations were rejected across fixed-point advancement,
+  full-path splitting, recursive unquoting, double encoding, encoded separators,
+  unchanged outbound paths, no-network proof, README guidance, and completed
+  plan status.
+- Targeted probes confirmed raw, single-encoded, double-encoded, and
+  encoded-separator traversal paths are rejected while valid encoded filenames
+  and malformed stable percent sequences terminate without rewriting.

@@ -22,6 +22,7 @@ CI_PLANS = [
     ROOT / "docs" / "plans" / "2026-06-14-location-independent-make.md",
     ROOT / "docs" / "plans" / "2026-06-15-regular-token-cache-boundary.md",
     ROOT / "docs" / "plans" / "2026-06-16-atomic-token-cache-publication.md",
+    ROOT / "docs" / "plans" / "2026-06-17-recursive-dot-segment-validation.md",
 ]
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
 CODEOWNERS = ROOT / ".github" / "CODEOWNERS"
@@ -119,6 +120,17 @@ if not CODEOWNERS.exists() or CODEOWNERS.read_text().strip() != "* @garethpaul":
 
 if "GitHub Actions" not in README:
     errors.append("README must document the GitHub Actions check")
+
+for recursive_dot_segment_guidance in [
+    "any percent-decoding layer",
+    "including encoded path separators",
+    "Valid encoded paths are sent unchanged.",
+]:
+    if recursive_dot_segment_guidance not in README:
+        errors.append(
+            "README must preserve recursive dot-segment guidance %s"
+            % recursive_dot_segment_guidance
+        )
 
 if "command -v python2" in MAKEFILE or "Skipping legacy Python 2" in MAKEFILE:
     errors.append("Makefile must require Python 2 checks instead of skipping them")
@@ -310,8 +322,60 @@ if ".isspace()" not in SOURCE:
 if "'#' in api_call" not in SOURCE and '"#" in api_call' not in SOURCE:
     errors.append("fitbit.py must reject fragments inside protected API paths")
 
-if "path_segments" not in SOURCE or "'.', '..'" not in SOURCE or "urlparse.unquote" not in SOURCE:
-    errors.append("fitbit.py must reject dot segments inside protected API paths")
+for recursive_dot_segment_contract in [
+    "def contains_dot_path_segment(path):",
+    "while True:",
+    "path.split('/')",
+    "decoded_path = urlparse.unquote(path)",
+    "if decoded_path == path:",
+    "path = decoded_path",
+    "contains_dot_path_segment(urlparse.urlsplit(api_call).path)",
+]:
+    if recursive_dot_segment_contract not in SOURCE:
+        errors.append(
+            "fitbit.py must preserve recursive dot-segment contract %s"
+            % recursive_dot_segment_contract
+        )
+
+valid_encoded_path_test = re.search(
+    r"^    def test_protected_resource_path_preserves_valid_encoded_filename\(.*?(?=^    def |\Z)",
+    TEST_SOURCE,
+    flags=re.MULTILINE | re.DOTALL,
+)
+for valid_encoded_path_contract in [
+    "'/1/user/-/profile%252ejson'",
+    "self.assertEqual(api_call, FakeOAuthRequest.created[0].http_url)",
+    "FakeHTTPSConnection.instances[0].requests",
+]:
+    if (
+        not valid_encoded_path_test
+        or valid_encoded_path_contract not in valid_encoded_path_test.group(0)
+    ):
+        errors.append(
+            "legacy tests must preserve unchanged encoded path contract %s"
+            % valid_encoded_path_contract
+        )
+
+invalid_path_test = re.search(
+    r"^    def test_rejects_non_api_paths_before_network\(.*?(?=^    def |\Z)",
+    TEST_SOURCE,
+    flags=re.MULTILINE | re.DOTALL,
+)
+for recursive_dot_segment_test_contract in [
+    "'/1/user/-/%252e%252e/profile.json'",
+    "'/1/user/-/%2e%2e%2fprofile.json'",
+    "'/1/user/-/%252e%252e%252fprofile.json'",
+    "self.assertEqual([], FakeOAuthRequest.created)",
+    "self.assertEqual([], FakeHTTPSConnection.instances)",
+]:
+    if (
+        not invalid_path_test
+        or recursive_dot_segment_test_contract not in invalid_path_test.group(0)
+    ):
+        errors.append(
+            "legacy tests must preserve recursive dot-segment contract %s"
+            % recursive_dot_segment_test_contract
+        )
 
 if "CREDENTIAL_QUERY_PARAMETERS" not in SOURCE or "urlparse.parse_qsl" not in SOURCE:
     errors.append("fitbit.py must reject credential query parameters inside protected API paths")

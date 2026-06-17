@@ -37,7 +37,7 @@ Helpful reports include:
 
 For web services, APIs, sockets, or scraping workflows, prioritize reports involving authentication bypass, authorization errors, injection, server-side request forgery, unsafe deserialization, credential leakage, data exposure, or denial-of-service conditions. Use test accounts and minimal proof-of-concept traffic only.
 
-Protected Fitbit resource calls should be passed as API paths such as `/1/user/-/profile.json`. The sample rejects absolute URLs, scheme-relative URLs, paths with embedded raw whitespace, URL fragments, raw or percent-encoded dot segments, and credential query parameters before opening a network connection.
+Protected Fitbit resource calls should be passed as API paths such as `/1/user/-/profile.json`. The sample rejects absolute URLs, scheme-relative URLs, paths with embedded raw whitespace, URL fragments, dot segments exposed at any percent-decoding layer (including encoded separators), and credential query parameters before opening a network connection. Valid encoded paths are sent unchanged.
 
 Existing `access_token.string` cache files must be owner-only. Files with group
 or other permissions are rejected before the cached-token branch opens a Fitbit

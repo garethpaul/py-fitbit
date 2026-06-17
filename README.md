@@ -59,8 +59,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Protected-resource paths are trimmed at the edges but must not contain raw
   whitespace or control characters.
 - Protected-resource paths must not include URL fragments.
-- Protected-resource paths must not include raw or percent-encoded `.` or `..`
-  path segments.
+- Protected-resource paths must not include `.` or `..` segments exposed at
+  any percent-decoding layer, including encoded path separators. Valid encoded
+  paths are sent unchanged.
 - Protected-resource paths must not include credential query parameters such as
   `oauth_token`, `access_token`, or `client_secret`; OAuth credentials belong
   in the signed request header or local settings.
@@ -91,7 +92,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   rejects checked-out `.pyc` files or `__pycache__` directories.
 - GitHub Actions runs the complete gate in the official Python 2.7.18 image,
   pinned by digest, with read-only repository permissions. The job does not
-  skip Python 2 compilation or the fifteen mocked OAuth tests.
+  skip Python 2 compilation or the complete mocked OAuth suite.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -108,8 +109,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   requests are opened.
 - Protected Fitbit resource paths reject fragments before network requests are
   opened.
-- Protected Fitbit resource paths reject raw and percent-encoded `.` and `..`
-  path segments before network requests are opened.
+- Protected Fitbit resource paths reject `.` and `..` segments at every
+  percent-decoding layer, including encoded separators, before network requests
+  are opened. Valid encoded paths are sent unchanged.
 - Protected Fitbit resource paths reject credential query parameters before
   network requests are opened.
 - Existing `access_token.string` files must be owner-only; readable-by-group or

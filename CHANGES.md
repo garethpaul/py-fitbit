@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-17
+
+- Rejected recursively encoded protected-resource dot segments and encoded
+  traversal separators before network creation while preserving valid encoded
+  request paths unchanged.
+
 ## 2026-06-16
 
 - Published refreshed OAuth token caches through a same-directory staged write
