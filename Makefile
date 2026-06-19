@@ -12,6 +12,7 @@ lint:
 	python3 scripts/check_legacy_fitbit.py
 
 test:
+	PYTHONDONTWRITEBYTECODE=1 python2 tests/test_settings.py
 	PYTHONDONTWRITEBYTECODE=1 python2 tests/test_fitbit_oauth_request.py
 
 build: test

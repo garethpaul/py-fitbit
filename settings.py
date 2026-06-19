@@ -11,7 +11,7 @@ import os
 
 def _required_env(name):
     value = os.environ.get(name)
-    if value:
+    if value and value.strip():
         return value
     raise RuntimeError(
         "Missing required environment variable %s. Set Fitbit OAuth "

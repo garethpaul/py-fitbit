@@ -15,11 +15,12 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 - `.github/workflows/check.yml` - pinned Python 2.7 hosted verification
 - `CHANGES.md` - notable maintenance changes
 - `Makefile` - local verification entry points
+- `settings.py` - tracked, secret-free environment loader
 - `docs/plans` - canonical completed maintenance plans
 - `plans` - completed maintenance plans
 - `scripts` - deterministic legacy safety checks
 - `SECURITY.md` - security reporting and disclosure guidance
-- `tests` - Python 2 mock-based tests for the legacy OAuth request path
+- `tests` - Python 2 settings-contract and mocked OAuth request tests
 - `VISION.md` - project direction and maintenance guardrails
 
 Additional scan context:
@@ -27,7 +28,7 @@ Additional scan context:
 - Source directories: scripts, tests
 - Dependency and build manifests: Makefile
 - Entry points or build surfaces: fitbit.py, Makefile
-- Test-looking files: scripts/check_legacy_fitbit.py, tests/test_fitbit_oauth_request.py
+- Test-looking files: scripts/check_legacy_fitbit.py, tests/test_settings.py, tests/test_fitbit_oauth_request.py
 
 ## Getting Started
 
@@ -49,7 +50,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 ## Running or Using the Project
 
-- Create a local, untracked `settings.py` with `CONSUMER_KEY` and `CONSUMER_SECRET`.
+- Set `FITBIT_CONSUMER_KEY` and `FITBIT_CONSUMER_SECRET` in the environment.
+  The tracked `settings.py` loader rejects unset, empty, and whitespace-only
+  values before a Fitbit request can be opened. It does not read local files.
 - Run `fitbit.py` with Python 2.7 if you need to exercise the legacy OAuth 1 flow.
 - OAuth request, access-token, and authorization endpoints are pinned to
   `https://api.fitbit.com`.
@@ -74,19 +77,28 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 - Run `make check` before committing changes.
 - Run `make build` for the static legacy verification gate; it uses the same
-  mocked Python 2 tests as `make test`.
-- `make check` delegates to `make verify`, which compiles the Python 2 source, checks that credential/token handling stays local, keeps debug logging disabled by default, runs mocked OAuth request, request-token flow, API path validation, and token-cache tests without contacting Fitbit, and verifies completed plans under `docs/plans`.
+  Python 2 settings-contract and mocked OAuth tests as `make test`.
+- `make check` delegates to `make verify`, which compiles the Python 2 source,
+  checks that credential/token handling stays local, keeps debug logging
+  disabled by default, runs the settings-contract suite and mocked OAuth
+  request, request-token flow, API path validation, and token-cache suite
+  without contacting Fitbit, and verifies completed plans under `docs/plans`.
 - The test target disables Python bytecode writes, and the legacy safety check
   rejects checked-out `.pyc` files or `__pycache__` directories.
 - GitHub Actions runs the complete gate in the official Python 2.7.18 image,
   pinned by digest, with read-only repository permissions. The job does not
-  skip Python 2 compilation or the ten mocked OAuth tests.
+  skip Python 2 compilation or either Python 2 test suite.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
 ## Configuration and Secrets
 
-- Detected references to Fitbit. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
+- Keep API keys, OAuth credentials, tokens, and account-specific values out of
+  the repository. Supply the required Fitbit consumer key and secret through
+  `FITBIT_CONSUMER_KEY` and `FITBIT_CONSUMER_SECRET`.
+- `access_token.string` remains generated, untracked, and owner-only.
+- The legacy `oauth2` dependency is undeclared, and compatibility with Fitbit's
+  current OAuth service has not been verified.
 
 ## Security and Privacy Notes
 
@@ -135,6 +147,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   full Python 2.7 hosted verification.
 - See `docs/plans/2026-06-10-http-status-validation.md` for OAuth and protected
   resource response status validation.
+- See `docs/plans/2026-06-19-tracked-settings-module.md` for the tracked,
+  fail-closed environment loader and canonical gate integration.
 
 ## Contributing
 
