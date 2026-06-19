@@ -9,6 +9,11 @@ exchange, local access-token storage, and direct API calls from Python.
 The goal is to preserve the learning value while making the legacy protocol,
 Python version, and credential risks explicit.
 
+Current baseline: `make check` verifies Python 2 syntax, repository-local
+credential guardrails, mocked OAuth request and token-cache behavior, the static
+legacy build gate, and completed `docs/plans` coverage without contacting
+Fitbit.
+
 The current focus is:
 
 Priority:
@@ -16,12 +21,29 @@ Priority:
 - Preserve the OAuth request, authorize, and access-token flow
 - Keep consumer keys and secrets in local settings only
 - Treat Python 2 syntax and OAuth 1-era endpoints as legacy
+- Maintain `make check` and `make build` for Python 2 syntax and
+  credential-safety checks
 - Avoid printing or committing real access tokens
+- Keep local token-cache files owner-only
+- Reject cached access-token files that are readable by group or other users
+- Keep cached-token and request-token OAuth branches covered by mocks
+- Reject failed OAuth and protected-resource HTTP responses before parsing or
+  returning their bodies
+- Keep protected resource calls constrained to Fitbit API paths
+- Reject raw whitespace inside protected resource API paths
+- Reject URL fragments inside protected resource API paths
+- Reject raw and percent-encoded dot segments inside protected resource API
+  paths
+- Reject credential query parameters inside protected resource API paths
+- Keep OAuth endpoints pinned to HTTPS
+- Keep legacy verification from leaving Python bytecode in the repository tree
+- Run the complete legacy gate in digest-pinned hosted Python 2.7 without
+  skipping mocked OAuth coverage
+- Keep completed maintenance plans under `docs/plans`
 
 Next priorities:
 
-- Add README setup notes for Python version and dependencies
-- Move token-file handling behind a safer storage abstraction
+- Expand README setup notes for Python version and dependencies
 - Return structured errors instead of printing debug responses by default
 - Document whether current Fitbit APIs still support the demonstrated flow
 
