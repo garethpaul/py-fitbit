@@ -1,5 +1,17 @@
 # Changes
 
+## 2026-06-19
+
+- Integrated the tracked environment-only settings loader with the maintained
+  OAuth stack and made the dependency-free runtime tests executable under both
+  Python 2.7 and current Python 3 versions.
+- Rejected malformed and recursively encoded protected-resource paths and
+  credential query names, safely encoded authorization tokens, validated OAuth
+  token/verifier structure, and added bounded JSON validation.
+- Hardened token-cache directory ownership, descriptor identity, size limits,
+  destination rechecks, and durable atomic publication.
+- Preserved primary network and response failures when cleanup also fails.
+
 ## 2026-06-17
 
 - Rejected recursively encoded protected-resource dot segments and encoded
