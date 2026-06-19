@@ -164,20 +164,18 @@ def parse_oauth_token(token_string):
    return oauth.OAuthToken.from_string(token_string)
 
 
-def close_preserving_primary_error(resource, primary_error_active=False):
+def close_suppressing_errors(resource):
    try:
       resource.close()
    except Exception:
-      if not primary_error_active:
-         raise
+      pass
 
 
-def close_fd_preserving_primary_error(fd, primary_error_active=False):
+def close_fd_suppressing_errors(fd):
    try:
       os.close(fd)
    except Exception:
-      if not primary_error_active:
-         raise
+      pass
 
 
 def validate_json_response(body):
@@ -210,14 +208,15 @@ def read_access_token_string(fname=ACCESS_TOKEN_STRING_FNAME):
          token_string = fobj.read(MAX_TOKEN_CACHE_BYTES + 1)
          if len(token_string) > MAX_TOKEN_CACHE_BYTES:
             raise IOError('access token cache exceeds size limit')
-         return token_string
-      finally:
-         close_preserving_primary_error(
-            fobj, sys.exc_info()[0] is not None)
-   finally:
+      except Exception:
+         close_suppressing_errors(fobj)
+         raise
+      fobj.close()
+      return token_string
+   except Exception:
       if fd is not None:
-         close_fd_preserving_primary_error(
-            fd, sys.exc_info()[0] is not None)
+         close_fd_suppressing_errors(fd)
+      raise
 
 
 def write_access_token_string(access_token_string, fname=ACCESS_TOKEN_STRING_FNAME):
@@ -327,10 +326,11 @@ def read_success_response(response, operation):
          raise IOError(
             'Fitbit %s response exceeds %s bytes' %
             (operation, MAX_RESPONSE_BODY_BYTES))
-      return body
-   finally:
-      close_preserving_primary_error(
-         response, sys.exc_info()[0] is not None)
+   except Exception:
+      close_suppressing_errors(response)
+      raise
+   response.close()
+   return body
 
 
 def fitbit(api_call):
@@ -397,11 +397,13 @@ def fitbit(api_call):
       data = read_success_response(resp, 'protected resource request')
       if urlparse.urlsplit(api_call).path.lower().endswith('.json'):
          validate_json_response(data)
-      return data
-   finally:
+   except Exception:
       if connection is not None:
-         close_preserving_primary_error(
-            connection, sys.exc_info()[0] is not None)
+         close_suppressing_errors(connection)
+      raise
+   if connection is not None:
+      connection.close()
+   return data
 
 if __name__ == '__main__':
    print(json.loads(fitbit('/1/user/-/sleep/date/2013-08-31.json')))
