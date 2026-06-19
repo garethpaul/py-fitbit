@@ -10,8 +10,10 @@ except ImportError:
    import http.client as httplib
 try:
    import urlparse
+   from urllib import quote
 except ImportError:
    import urllib.parse as urlparse
+   from urllib.parse import quote
 from oauth import oauth 
 import json
 import settings
@@ -162,8 +164,7 @@ def parse_oauth_token(token_string):
    return oauth.OAuthToken.from_string(token_string)
 
 
-def close_preserving_primary_error(resource):
-   primary_error_active = sys.exc_info()[0] is not None
+def close_preserving_primary_error(resource, primary_error_active=False):
    try:
       resource.close()
    except Exception:
@@ -171,8 +172,7 @@ def close_preserving_primary_error(resource):
          raise
 
 
-def close_fd_preserving_primary_error(fd):
-   primary_error_active = sys.exc_info()[0] is not None
+def close_fd_preserving_primary_error(fd, primary_error_active=False):
    try:
       os.close(fd)
    except Exception:
@@ -212,10 +212,12 @@ def read_access_token_string(fname=ACCESS_TOKEN_STRING_FNAME):
             raise IOError('access token cache exceeds size limit')
          return token_string
       finally:
-         close_preserving_primary_error(fobj)
+         close_preserving_primary_error(
+            fobj, sys.exc_info()[0] is not None)
    finally:
       if fd is not None:
-         close_fd_preserving_primary_error(fd)
+         close_fd_preserving_primary_error(
+            fd, sys.exc_info()[0] is not None)
 
 
 def write_access_token_string(access_token_string, fname=ACCESS_TOKEN_STRING_FNAME):
@@ -327,7 +329,8 @@ def read_success_response(response, operation):
             (operation, MAX_RESPONSE_BODY_BYTES))
       return body
    finally:
-      close_preserving_primary_error(response)
+      close_preserving_primary_error(
+         response, sys.exc_info()[0] is not None)
 
 
 def fitbit(api_call):
@@ -350,7 +353,7 @@ def fitbit(api_call):
          # authorize the request token
          print('* Authorize the request token ...')
          auth_url="%s?oauth_token=%s" % (
-            AUTHORIZATION_URL, urlparse.quote(auth_token.key, safe=''))
+            AUTHORIZATION_URL, quote(auth_token.key, safe=''))
          print('Authorization URL:\n%s' % auth_url)
          oauth_verifier = read_input(
             'Please go to the above URL and authorize the '+
@@ -397,7 +400,8 @@ def fitbit(api_call):
       return data
    finally:
       if connection is not None:
-         close_preserving_primary_error(connection)
+         close_preserving_primary_error(
+            connection, sys.exc_info()[0] is not None)
 
 if __name__ == '__main__':
    print(json.loads(fitbit('/1/user/-/sleep/date/2013-08-31.json')))

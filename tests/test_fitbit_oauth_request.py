@@ -731,7 +731,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         request_key = 'request-key&redirect_uri=https://evil.example/'
         request_token = (
             'oauth_token=%s&oauth_token_secret=request-secret' %
-            urlparse.quote(request_key, safe='')
+            fitbit.quote(request_key, safe='')
         )
         FakeHTTPSConnection.response_bodies = [
             request_token,

@@ -621,7 +621,7 @@ response_reader = re.search(
     SOURCE,
     flags=re.MULTILINE | re.DOTALL,
 )
-if not response_reader or "close_preserving_primary_error(response)" not in response_reader.group(0):
+if not response_reader or "close_preserving_primary_error(" not in response_reader.group(0):
     errors.append("fitbit.py must close every attempted Fitbit response")
 
 fitbit_function = re.search(
@@ -632,7 +632,7 @@ fitbit_function = re.search(
 if (
     not fitbit_function
     or "connection = None" not in fitbit_function.group(0)
-    or "close_preserving_primary_error(connection)" not in fitbit_function.group(0)
+    or "close_preserving_primary_error(" not in fitbit_function.group(0)
 ):
     errors.append("fitbit.py must close each created HTTPS connection when the call exits")
 if not fitbit_function or "if not os.path.lexists(ACCESS_TOKEN_STRING_FNAME):" not in fitbit_function.group(0):
