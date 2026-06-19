@@ -1,16 +1,61 @@
 # Changes
 
+## 2026-06-19
+
+- Integrated the tracked environment-only settings loader with the maintained
+  OAuth stack and made the dependency-free runtime tests executable under both
+  Python 2.7 and current Python 3 versions.
+- Rejected malformed and recursively encoded protected-resource paths and
+  credential query names, safely encoded authorization tokens, validated OAuth
+  token/verifier structure, and added bounded JSON validation.
+- Hardened token-cache directory ownership, descriptor identity, size limits,
+  destination rechecks, and durable atomic publication.
+- Preserved primary network and response failures when cleanup also fails.
+
+## 2026-06-17
+
+- Rejected recursively encoded protected-resource dot segments and encoded
+  traversal separators before network creation while preserving valid encoded
+  request paths unchanged.
+
+## 2026-06-16
+
+- Published refreshed OAuth token caches through a same-directory staged write
+  and atomic rename so handled write failures preserve the last valid token and
+  hard-linked targets remain unchanged.
+
+## 2026-06-13
+
+- Rejected symbolic-link token caches for reads and writes and moved owner-only
+  read permission checks onto the opened file descriptor.
+- Included dangling token-cache symlinks in cache existence checks so existing
+  read guards reject them before network access.
+- Rejected non-regular token-cache paths before open and required the opened
+  descriptor to remain a regular file.
+- Ensured OAuth and protected-resource response objects are closed after every
+  bounded read attempt, including status, size, and read failures.
+- Ensured created HTTPS connections are closed exactly once after cached-token
+  and interactive OAuth calls, including HTTP failure paths.
+
+## 2026-06-12
+
+- Added 1 MiB bounded response reads for OAuth token exchanges and protected
+  resources, with exact Python 2 read-limit and oversized-payload regressions.
+- Stopped printing OAuth token credentials and limited optional debug output to
+  non-secret request and response metadata.
+
 ## 2026-06-10
 
-- Added read-only hosted verification in a digest-pinned Python 2.7.18
-  container without skipping legacy tests.
-- Extended the safety checker to preserve the container, checkout, and
-  full-gate workflow contract.
+- Added digest-pinned Python 2.7 hosted validation that runs the full mocked
+  Fitbit OAuth baseline without skipping legacy tests.
+- Added credential-free checkout, read-only permissions, CODEOWNERS, and
+  sole-workflow enforcement.
+- Extended the legacy safety checker to require the CI workflow and completed
+  CI plans.
 - Added a cached access-token read guard that rejects `access_token.string`
   files with group or other permissions before opening a Fitbit request.
 - Added HTTP status validation for OAuth token exchanges and protected resource
   calls without exposing failed response bodies in errors.
-
 ## 2026-06-09
 
 - Added bytecode-free verification coverage for the legacy Python 2 tests.

@@ -29,17 +29,27 @@ Priority:
 - Keep cached-token and request-token OAuth branches covered by mocks
 - Reject failed OAuth and protected-resource HTTP responses before parsing or
   returning their bodies
+- Keep bounded response reads on OAuth and protected-resource payloads
+- Ensure OAuth and protected-resource response objects are closed after every
+  attempted read
+- Ensure created HTTPS connections are closed once after each complete client
+  call
 - Keep protected resource calls constrained to Fitbit API paths
 - Reject raw whitespace inside protected resource API paths
 - Reject URL fragments inside protected resource API paths
-- Reject raw and percent-encoded dot segments inside protected resource API
-  paths
+- Reject dot segments exposed at any percent-decoding layer, including encoded
+  path separators, inside protected resource API paths
 - Reject credential query parameters inside protected resource API paths
 - Keep OAuth endpoints pinned to HTTPS
+- Include dangling token-cache symlinks in cache existence checks
+- Reject non-regular token-cache paths before OAuth or HTTPS work
+- Publish refreshed token caches atomically without truncating the last valid
+  value or overwriting a hard-linked target
 - Keep legacy verification from leaving Python bytecode in the repository tree
 - Run the complete legacy gate in digest-pinned hosted Python 2.7 without
   skipping mocked OAuth coverage
 - Keep completed maintenance plans under `docs/plans`
+- Keep the static `make check` baseline running in GitHub Actions
 
 Next priorities:
 

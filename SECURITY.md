@@ -30,19 +30,35 @@ Helpful reports include:
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
 - Review found secret-like configuration names that require careful review before use; changes in those areas should receive security-focused review before merge.
 - No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
+- GitHub Actions runs the full mocked `make check` baseline in a pinned Python
+  2 container without persisted checkout credentials.
 
 ## Service and API Notes
 
 For web services, APIs, sockets, or scraping workflows, prioritize reports involving authentication bypass, authorization errors, injection, server-side request forgery, unsafe deserialization, credential leakage, data exposure, or denial-of-service conditions. Use test accounts and minimal proof-of-concept traffic only.
 
-Protected Fitbit resource calls should be passed as API paths such as `/1/user/-/profile.json`. The sample rejects absolute URLs, scheme-relative URLs, paths with embedded raw whitespace, URL fragments, raw or percent-encoded dot segments, and credential query parameters before opening a network connection.
+Protected Fitbit resource calls should be passed as API paths such as `/1/user/-/profile.json`. The sample rejects absolute URLs, scheme-relative URLs, paths with embedded raw whitespace, URL fragments, dot segments exposed at any percent-decoding layer (including encoded separators), and credential query parameters before opening a network connection. Valid encoded paths are sent unchanged.
 
 Existing `access_token.string` cache files must be owner-only. Files with group
 or other permissions are rejected before the cached-token branch opens a Fitbit
-network connection.
+network connection. Token-cache reads and writes reject symbolic links, and
+read permissions are validated on the opened descriptor rather than a separate
+pathname lookup. All dangling token-cache symlinks are rejected before cache
+network access because cache existence checks do not follow symlink targets.
+Existing non-regular token-cache paths are rejected before open, and descriptor
+validation prevents a path race from substituting a special file for the cache.
 OAuth token and protected resource responses must use a 2xx HTTP status. Error
 responses are rejected without copying their bodies into exception messages,
 where credential or health-data details could otherwise leak into logs.
+Both paths use bounded response reads of 1 MiB plus one detection byte so a bad
+endpoint cannot force an unbounded credential or health-data allocation.
+OAuth and protected-resource response objects are closed after every attempted
+read so rejected or failed responses do not retain connection resources.
+Created HTTPS connections are closed exactly once when the complete OAuth or
+cached-token request sequence exits, including failure paths.
+Interactive authorization does not print OAuth token secrets. Debug output is
+limited to request methods, response statuses, and response sizes so signed
+URLs and raw token response bodies do not persist in terminal or build logs.
 
 Hosted verification runs the full mocked OAuth gate in a digest-pinned Python
 2.7.18 container with read-only repository permissions. It does not contact
