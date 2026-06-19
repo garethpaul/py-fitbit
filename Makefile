@@ -10,6 +10,7 @@ docs:
 lint:
 	python2 -c "import py_compile; py_compile.compile('fitbit.py', cfile='/tmp/py-fitbit-fitbit.pyc', doraise=True)"
 	python3 scripts/check_legacy_fitbit.py
+	PYTHONDONTWRITEBYTECODE=1 python3 tests/test_checker_integrity.py
 
 test:
 	PYTHONDONTWRITEBYTECODE=1 python2 tests/test_settings.py

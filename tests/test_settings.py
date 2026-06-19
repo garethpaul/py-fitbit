@@ -14,6 +14,28 @@ KEY_NAME = "FITBIT_CONSUMER_KEY"
 SECRET_NAME = "FITBIT_CONSUMER_SECRET"
 KEY_VALUE = "synthetic-key-value"
 SECRET_VALUE = "synthetic-secret-value"
+KEY_PLACEHOLDERS = (
+    "changeme",
+    "CHANGE ME",
+    " change-me ",
+    "replace-me",
+    " RePlAcE_Me ",
+    "YOUR_FITBIT_CONSUMER_KEY",
+    " your fitbit consumer key ",
+    "<consumer-key>",
+    " Example Key ",
+)
+SECRET_PLACEHOLDERS = (
+    "changeme",
+    "CHANGE ME",
+    " change-me ",
+    "replace-me",
+    " RePlAcE_Me ",
+    "YOUR_FITBIT_CONSUMER_SECRET",
+    " your fitbit consumer secret ",
+    "<consumer-secret>",
+    " Example Secret ",
+)
 
 
 class SettingsContractTest(unittest.TestCase):
@@ -85,6 +107,31 @@ class SettingsContractTest(unittest.TestCase):
 
     def test_whitespace_only_secret_is_rejected(self):
         self.assert_rejected(SECRET_NAME, secret=" \t")
+
+    def test_placeholder_like_keys_are_rejected(self):
+        for value in KEY_PLACEHOLDERS:
+            self.assert_rejected(KEY_NAME, key=value)
+
+    def test_placeholder_like_secrets_are_rejected(self):
+        for value in SECRET_PLACEHOLDERS:
+            self.assert_rejected(SECRET_NAME, secret=value)
+
+    def test_non_placeholder_values_with_similar_words_are_preserved(self):
+        key = "changeme-live-9f4b2"
+        secret = "example-secret-live-a7c8d"
+        assertions = (
+            "assert settings.CONSUMER_KEY == %r; "
+            "assert settings.CONSUMER_SECRET == %r"
+        ) % (key, secret)
+        returncode, stdout, stderr, created = self.run_import(
+            key=key,
+            secret=secret,
+            assertions=assertions,
+        )
+        self.assertEqual(0, returncode, stderr)
+        self.assertEqual(b"", stdout)
+        self.assertEqual(b"", stderr)
+        self.assertEqual([], created)
 
 
 if __name__ == "__main__":

@@ -2,8 +2,11 @@
 """Repository-local safety checks for the legacy Fitbit OAuth sample."""
 
 import ast
+import os
 import re
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -13,6 +16,7 @@ MAKEFILE = (ROOT / "Makefile").read_text()
 README = (ROOT / "README.md").read_text()
 SETTINGS_PATH = ROOT / "settings.py"
 SETTINGS_TEST_PATH = ROOT / "tests" / "test_settings.py"
+CHECKER_INTEGRITY_TEST_PATH = ROOT / "tests" / "test_checker_integrity.py"
 STALE_CHECKER_PATH = ROOT / "scripts" / "check-baseline.sh"
 CI_PLAN = ROOT / "docs" / "plans" / "2026-06-10-hosted-legacy-validation.md"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
@@ -70,6 +74,15 @@ if MAKEFILE.splitlines().count(settings_test_command) != 1:
 
 if not SETTINGS_TEST_PATH.exists():
     errors.append("tests/test_settings.py is missing")
+
+checker_integrity_command = (
+    "\tPYTHONDONTWRITEBYTECODE=1 python3 tests/test_checker_integrity.py"
+)
+if MAKEFILE.splitlines().count(checker_integrity_command) != 1:
+    errors.append("Makefile must run the checker integrity regression test")
+
+if not CHECKER_INTEGRITY_TEST_PATH.exists():
+    errors.append("tests/test_checker_integrity.py is missing")
 
 if STALE_CHECKER_PATH.exists():
     errors.append(
@@ -141,6 +154,112 @@ else:
             errors.append("settings.py must reference %s" % environment_name)
         if environment_name not in README:
             errors.append("README.md must document %s" % environment_name)
+
+
+def run_settings_import(key, secret, assertions=""):
+    environment = os.environ.copy()
+    environment["PYTHONDONTWRITEBYTECODE"] = "1"
+    environment["PYTHONPATH"] = str(ROOT)
+    for name, value in (
+        ("FITBIT_CONSUMER_KEY", key),
+        ("FITBIT_CONSUMER_SECRET", secret),
+    ):
+        if value is None:
+            environment.pop(name, None)
+        else:
+            environment[name] = value
+
+    command = "import settings"
+    if assertions:
+        command += "; " + assertions
+
+    with tempfile.TemporaryDirectory(prefix="py-fitbit-settings-check-") as cwd:
+        process = subprocess.run(
+            [sys.executable, "-c", command],
+            cwd=cwd,
+            env=environment,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        created = os.listdir(cwd)
+    return process.returncode, process.stdout, process.stderr, created
+
+
+def require_settings_rejection(label, key, secret, expected_name):
+    returncode, stdout, stderr, created = run_settings_import(key, secret)
+    supplied_values = [
+        value.encode("utf-8")
+        for value in (key, secret)
+        if value
+    ]
+    if (
+        returncode == 0
+        or stdout
+        or expected_name.encode("ascii") not in stderr
+        or any(value in stderr for value in supplied_values)
+        or created
+    ):
+        errors.append("settings.py runtime contract failed for %s" % label)
+
+
+valid_key = "synthetic-key-value"
+valid_secret = "synthetic-secret-value"
+valid_assertions = (
+    "import sys; sys.exit(0 if settings.CONSUMER_KEY == %r "
+    "and settings.CONSUMER_SECRET == %r else 9)"
+) % (valid_key, valid_secret)
+valid_result = run_settings_import(valid_key, valid_secret, valid_assertions)
+if valid_result != (0, b"", b"", []):
+    errors.append("settings.py runtime contract failed for valid credentials")
+
+require_settings_rejection(
+    "missing key", None, valid_secret, "FITBIT_CONSUMER_KEY"
+)
+require_settings_rejection(
+    "missing secret", valid_key, None, "FITBIT_CONSUMER_SECRET"
+)
+require_settings_rejection(
+    "empty key", "", valid_secret, "FITBIT_CONSUMER_KEY"
+)
+require_settings_rejection(
+    "empty secret", valid_key, "", "FITBIT_CONSUMER_SECRET"
+)
+require_settings_rejection(
+    "whitespace key", " \t", valid_secret, "FITBIT_CONSUMER_KEY"
+)
+require_settings_rejection(
+    "whitespace secret", valid_key, " \t", "FITBIT_CONSUMER_SECRET"
+)
+
+for placeholder in (
+    "changeme",
+    "CHANGE ME",
+    " change-me ",
+    "replace-me",
+    " RePlAcE_Me ",
+    "YOUR_FITBIT_CONSUMER_KEY",
+    " your fitbit consumer key ",
+    "<consumer-key>",
+    " Example Key ",
+):
+    require_settings_rejection(
+        "placeholder key", placeholder, valid_secret, "FITBIT_CONSUMER_KEY"
+    )
+
+for placeholder in (
+    "changeme",
+    "CHANGE ME",
+    " change-me ",
+    "replace-me",
+    " RePlAcE_Me ",
+    "YOUR_FITBIT_CONSUMER_SECRET",
+    " your fitbit consumer secret ",
+    "<consumer-secret>",
+    " Example Secret ",
+):
+    require_settings_rejection(
+        "placeholder secret", valid_key, placeholder, "FITBIT_CONSUMER_SECRET"
+    )
 
 if "settings.py" in GITIGNORE_LINES:
     errors.append(".gitignore must not ignore the tracked settings.py module")

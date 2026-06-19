@@ -52,7 +52,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 - Set `FITBIT_CONSUMER_KEY` and `FITBIT_CONSUMER_SECRET` in the environment.
   The tracked `settings.py` loader rejects unset, empty, and whitespace-only
-  values before a Fitbit request can be opened. It does not read local files.
+  values plus common placeholder forms before a Fitbit request can be opened.
+  This only rejects known placeholders; it does not validate credentials with
+  Fitbit. The loader does not read local files.
 - Run `fitbit.py` with Python 2.7 if you need to exercise the legacy OAuth 1 flow.
 - OAuth request, access-token, and authorization endpoints are pinned to
   `https://api.fitbit.com`.
@@ -80,7 +82,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   Python 2 settings-contract and mocked OAuth tests as `make test`.
 - `make check` delegates to `make verify`, which compiles the Python 2 source,
   checks that credential/token handling stays local, keeps debug logging
-  disabled by default, runs the settings-contract suite and mocked OAuth
+  disabled by default, independently verifies the settings runtime contract,
+  runs the settings-contract suite and mocked OAuth
   request, request-token flow, API path validation, and token-cache suite
   without contacting Fitbit, and verifies completed plans under `docs/plans`.
 - The test target disables Python bytecode writes, and the legacy safety check
