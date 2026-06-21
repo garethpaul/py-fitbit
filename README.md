@@ -151,6 +151,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
 
 ## Maintenance Notes
 
+- Make gates reject caller-controlled `MAKEFILE_LIST` and `REPO_ROOT` values
+  before running legacy Python or credential-safety checks.
+
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `docs/plans/2026-06-08-py-fitbit-baseline.md` for the canonical legacy

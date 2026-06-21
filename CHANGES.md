@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-21
+
+- Hardened all six pre-existing Make gates against `MAKEFILE_LIST` and
+  `REPO_ROOT` redirection without changing OAuth or token-cache behavior.
+
 ## 2026-06-19
 
 - Integrated the tracked environment-only settings loader with the maintained
