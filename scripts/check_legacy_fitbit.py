@@ -156,19 +156,23 @@ if "command -v python2" in MAKEFILE or "Skipping legacy Python 2" in MAKEFILE:
     errors.append("Makefile must require Python 2 checks instead of skipping them")
 
 for make_contract in [
+    "override SHELL := /bin/sh",
+    "override .SHELLFLAGS := -c",
+    "$(error MAKEFILES must be empty; repository verification requires this Makefile to be loaded alone)",
     "ifneq ($(origin MAKEFILE_LIST),file)",
     "$(error MAKEFILE_LIST must not be overridden)",
     "override REPO_ROOT := $(shell path=",
-    "/bin/sed",
+    "export REPO_ROOT",
+    "/usr/bin/sed",
     "/usr/bin/dirname",
     "/bin/pwd -P",
-    '\t@cd "$(REPO_ROOT)" && for plan in docs/plans/*.md; do \\\n',
-    '\tcd "$(REPO_ROOT)" && python2 -c "import py_compile;',
-    '\tcd "$(REPO_ROOT)" && python3 scripts/check_legacy_fitbit.py\n',
-    '\tcd "$(REPO_ROOT)" && PYTHONDONTWRITEBYTECODE=1 python3 tests/test_checker_integrity.py\n',
-    '\tcd "$(REPO_ROOT)" && PYTHONDONTWRITEBYTECODE=1 python2 tests/test_settings.py\n',
-    '\tcd "$(REPO_ROOT)" && PYTHONDONTWRITEBYTECODE=1 python2 tests/test_fitbit_oauth_request.py\n',
-    '\tcd "$(REPO_ROOT)" && scripts/test-makefile-root.sh\n',
+    '\t@cd "$$REPO_ROOT" && for plan in docs/plans/*.md; do \\\n',
+    '\tcd "$$REPO_ROOT" && python2 -c "import py_compile;',
+    '\tcd "$$REPO_ROOT" && python3 scripts/check_legacy_fitbit.py\n',
+    '\tcd "$$REPO_ROOT" && PYTHONDONTWRITEBYTECODE=1 python3 tests/test_checker_integrity.py\n',
+    '\tcd "$$REPO_ROOT" && PYTHONDONTWRITEBYTECODE=1 python2 tests/test_settings.py\n',
+    '\tcd "$$REPO_ROOT" && PYTHONDONTWRITEBYTECODE=1 python2 tests/test_fitbit_oauth_request.py\n',
+    '\tcd "$$REPO_ROOT" && scripts/test-makefile-root.sh\n',
     "verify: lint test build docs root-test",
 ]:
     if make_contract not in MAKEFILE:
@@ -178,7 +182,7 @@ if not SETTINGS_TEST_PATH.exists():
     errors.append("tests/test_settings.py is missing")
 
 checker_integrity_command = (
-    '\tcd "$(REPO_ROOT)" && PYTHONDONTWRITEBYTECODE=1 '
+    '\tcd "$$REPO_ROOT" && PYTHONDONTWRITEBYTECODE=1 '
     "python3 tests/test_checker_integrity.py"
 )
 if MAKEFILE.splitlines().count(checker_integrity_command) != 1:
@@ -193,7 +197,10 @@ else:
     root_test = ROOT_TEST_PATH.read_text()
     for contract in [
         "Py Fitbit",
-        "21 target/override cases",
+        "49 executed target/authority cases",
+        "hostile backticks blocked",
+        "dollar paths failed closed",
+        "1 MAKEFILES preload rejection",
         "2 MAKEFILE_LIST rejection cases",
         "MAKEFILE_LIST must not be overridden",
     ]:
@@ -207,7 +214,9 @@ else:
     for evidence in [
         "Status: Completed",
         "six pre-existing public Make targets plus the root regression gate",
-        "21 target and `REPO_ROOT` override cases",
+        "49 executed target and authority cases",
+        "Hostile checkout backticks were blocked and dollar-substitution paths failed closed",
+        "`MAKEFILES`, `SHELL`, and `.SHELLFLAGS` authority were covered",
         "Command-line and environment `MAKEFILE_LIST` overrides failed closed",
         "make check",
     ]:

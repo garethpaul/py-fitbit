@@ -18,15 +18,14 @@ outside the reviewed checkout.
 ## Work Completed
 
 - Reject command-line and environment replacement of `MAKEFILE_LIST`.
-- Canonicalize the checked-in Makefile directory through quoted POSIX tools.
-- Add coverage for all six pre-existing public Make targets plus the root regression gate.
+- Canonicalize the checked-in Makefile directory with pinned POSIX tools and export it only to recipes.
+- Add executed coverage for all six pre-existing public Make targets plus the root regression gate.
 - Include the root policy in `make verify` and `make check`.
 
 ## Verification Completed
 
-- Python 2.7.18 and Python 3.12.8 passed compilation, all 49 runtime tests,
-  the legacy safety checker, and checker integrity regression.
-- All 21 target and `REPO_ROOT` override cases passed from a checkout path with
-  spaces and an apostrophe.
+- 49 executed target and authority cases kept quality commands inside the checkout.
+- Hostile checkout backticks were blocked and dollar-substitution paths failed closed.
+- `MAKEFILES`, `SHELL`, and `.SHELLFLAGS` authority were covered. Python command names remain repository-owned.
 - Command-line and environment `MAKEFILE_LIST` overrides failed closed.
-- Python source, OAuth behavior, settings, and token-cache contracts were unchanged.
+- `make check` remains the complete repository gate and no runtime source changed.
