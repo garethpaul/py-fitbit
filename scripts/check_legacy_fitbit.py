@@ -159,6 +159,7 @@ for make_contract in [
     "ifneq ($(origin MAKEFILE_LIST),file)",
     "$(error MAKEFILE_LIST must not be overridden)",
     "override REPO_ROOT := $(shell path=",
+    "/bin/sed",
     "/usr/bin/dirname",
     "/bin/pwd -P",
     '\t@cd "$(REPO_ROOT)" && for plan in docs/plans/*.md; do \\\n',
