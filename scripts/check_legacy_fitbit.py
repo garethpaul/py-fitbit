@@ -163,7 +163,7 @@ for make_contract in [
     "$(error MAKEFILE_LIST must not be overridden)",
     "override REPO_ROOT := $(shell path=",
     "export REPO_ROOT",
-    "/usr/bin/sed",
+    "path=$${path\\# }",
     "/usr/bin/dirname",
     "/bin/pwd -P",
     '\t@cd "$$REPO_ROOT" && for plan in docs/plans/*.md; do \\\n',
