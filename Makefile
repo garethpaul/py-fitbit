@@ -1,6 +1,9 @@
-.PHONY: check build docs lint test verify
+.PHONY: check build docs lint root-test test verify
 
-override REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+ifneq ($(origin MAKEFILE_LIST),file)
+$(error MAKEFILE_LIST must not be overridden)
+endif
+override REPO_ROOT := $(shell path='$(subst ','"'"',$(MAKEFILE_LIST))'; path=$$(printf '%s' "$$path" | /usr/bin/sed 's/^ //'); directory=$$(/usr/bin/dirname -- "$$path"); CDPATH= cd -- "$$directory" && /bin/pwd -P)
 
 docs:
 	@cd "$(REPO_ROOT)" && for plan in docs/plans/*.md; do \
@@ -23,6 +26,9 @@ test:
 
 build: test
 
-verify: lint test build docs
+root-test:
+	cd "$(REPO_ROOT)" && scripts/test-makefile-root.sh
+
+verify: lint test build docs root-test
 
 check: verify

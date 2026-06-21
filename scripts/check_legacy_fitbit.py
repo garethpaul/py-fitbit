@@ -18,6 +18,8 @@ MAKEFILE = (ROOT / "Makefile").read_text()
 SETTINGS_PATH = ROOT / "settings.py"
 SETTINGS_TEST_PATH = ROOT / "tests" / "test_settings.py"
 CHECKER_INTEGRITY_TEST_PATH = ROOT / "tests" / "test_checker_integrity.py"
+ROOT_TEST_PATH = ROOT / "scripts" / "test-makefile-root.sh"
+ROOT_PLAN_PATH = ROOT / "docs" / "plans" / "2026-06-21-safe-make-root.md"
 STALE_CHECKER_PATH = ROOT / "scripts" / "check-baseline.sh"
 CI_PLANS = [
     ROOT / "docs" / "plans" / "2026-06-10-ci-baseline.md",
@@ -154,13 +156,19 @@ if "command -v python2" in MAKEFILE or "Skipping legacy Python 2" in MAKEFILE:
     errors.append("Makefile must require Python 2 checks instead of skipping them")
 
 for make_contract in [
-    "override REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))",
+    "ifneq ($(origin MAKEFILE_LIST),file)",
+    "$(error MAKEFILE_LIST must not be overridden)",
+    "override REPO_ROOT := $(shell path=",
+    "/usr/bin/dirname",
+    "/bin/pwd -P",
     '\t@cd "$(REPO_ROOT)" && for plan in docs/plans/*.md; do \\\n',
     '\tcd "$(REPO_ROOT)" && python2 -c "import py_compile;',
     '\tcd "$(REPO_ROOT)" && python3 scripts/check_legacy_fitbit.py\n',
     '\tcd "$(REPO_ROOT)" && PYTHONDONTWRITEBYTECODE=1 python3 tests/test_checker_integrity.py\n',
     '\tcd "$(REPO_ROOT)" && PYTHONDONTWRITEBYTECODE=1 python2 tests/test_settings.py\n',
     '\tcd "$(REPO_ROOT)" && PYTHONDONTWRITEBYTECODE=1 python2 tests/test_fitbit_oauth_request.py\n',
+    '\tcd "$(REPO_ROOT)" && scripts/test-makefile-root.sh\n',
+    "verify: lint test build docs root-test",
 ]:
     if make_contract not in MAKEFILE:
         errors.append("Makefile must preserve rooted recipe %s" % make_contract.strip())
@@ -177,6 +185,33 @@ if MAKEFILE.splitlines().count(checker_integrity_command) != 1:
 
 if not CHECKER_INTEGRITY_TEST_PATH.exists():
     errors.append("tests/test_checker_integrity.py is missing")
+
+if not ROOT_TEST_PATH.exists():
+    errors.append("scripts/test-makefile-root.sh is missing")
+else:
+    root_test = ROOT_TEST_PATH.read_text()
+    for contract in [
+        "Py Fitbit",
+        "21 target/override cases",
+        "2 MAKEFILE_LIST rejection cases",
+        "MAKEFILE_LIST must not be overridden",
+    ]:
+        if contract not in root_test:
+            errors.append("Makefile root test must preserve %s" % contract)
+
+if not ROOT_PLAN_PATH.exists():
+    errors.append("docs/plans/2026-06-21-safe-make-root.md is missing")
+else:
+    root_plan = ROOT_PLAN_PATH.read_text()
+    for evidence in [
+        "Status: Completed",
+        "six pre-existing public Make targets plus the root regression gate",
+        "21 target and `REPO_ROOT` override cases",
+        "Command-line and environment `MAKEFILE_LIST` overrides failed closed",
+        "make check",
+    ]:
+        if evidence not in root_plan:
+            errors.append("safe Make root plan must preserve %s" % evidence)
 
 if STALE_CHECKER_PATH.exists():
     errors.append(
