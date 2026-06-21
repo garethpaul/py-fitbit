@@ -6,8 +6,10 @@ TEMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/py-fitbit-root-control-XXXXXX")
 trap 'rm -rf "$TEMP_ROOT"' EXIT HUP INT TERM
 unset MAKEFILES MAKEFILE_LIST
 
-if grep -Fq '/usr/bin/sed' "$ROOT_DIR/Makefile"; then
-  printf '%s\n' 'Makefile root resolution must not depend on /usr/bin/sed' >&2
+grep -Fq 'sed_path=/usr/bin/sed' "$ROOT_DIR/Makefile"
+grep -Fq 'sed_path=/bin/sed' "$ROOT_DIR/Makefile"
+if grep -Eq '\|[[:space:]]+sed[[:space:]]' "$ROOT_DIR/Makefile"; then
+  printf '%s\n' 'Makefile root resolution must not use caller-controlled PATH for sed' >&2
   exit 1
 fi
 

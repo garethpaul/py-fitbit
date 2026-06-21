@@ -9,7 +9,7 @@ override MAKEFILES :=
 ifneq ($(origin MAKEFILE_LIST),file)
 $(error MAKEFILE_LIST must not be overridden)
 endif
-override REPO_ROOT := $(shell path='$(subst ','"'"',$(MAKEFILE_LIST))'; path=$${path\# }; [ -f "$$path" ] || exit 1; directory=$$(/usr/bin/dirname -- "$$path"); CDPATH= cd -- "$$directory" && /bin/pwd -P)
+override REPO_ROOT := $(shell path='$(subst ','"'"',$(MAKEFILE_LIST))'; if [ -x /usr/bin/sed ]; then sed_path=/usr/bin/sed; elif [ -x /bin/sed ]; then sed_path=/bin/sed; else exit 1; fi; path=$$(printf '%s' "$$path" | "$$sed_path" 's/^ //'); [ -f "$$path" ] || exit 1; directory=$$(/usr/bin/dirname -- "$$path"); CDPATH= cd -- "$$directory" && /bin/pwd -P)
 export REPO_ROOT
 ifeq ($(strip $(REPO_ROOT)),)
 $(error repository Makefile path could not be resolved)
