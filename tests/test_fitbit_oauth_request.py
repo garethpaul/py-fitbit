@@ -687,6 +687,28 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         self.assertEqual(1, FakeHTTPResponse.instances[0].close_calls)
         self.assertEqual(1, FakeHTTPSConnection.instances[0].close_calls)
 
+    def test_rejects_malformed_json_for_encoded_json_extension(self):
+        token_string = 'oauth_token=cached&oauth_token_secret=secret'
+        fitbit.write_access_token_string(token_string)
+        api_call = '/1/user/-/profile%2Ejson'
+        FakeHTTPSConnection.response_bodies = ['not-json-private-body']
+
+        original_stdout = sys.stdout
+        try:
+            sys.stdout = StringIO.StringIO()
+            with self.assertRaises(fitbit.FitbitResponseError) as raised:
+                fitbit.fitbit(api_call)
+        finally:
+            sys.stdout = original_stdout
+
+        self.assertEqual('invalid_json', raised.exception.reason)
+        self.assertNotIn('not-json-private-body', str(raised.exception))
+        self.assertEqual(api_call, FakeOAuthRequest.created[0].http_url)
+        self.assertEqual(
+            [('GET', api_call, {'Authorization': 'OAuth realm=api.fitbit.com'})],
+            FakeHTTPSConnection.instances[0].requests,
+        )
+
     def test_accepts_response_at_size_limit(self):
         body = 'x' * fitbit.MAX_RESPONSE_BODY_BYTES
         response = FakeHTTPResponse(body)

@@ -119,6 +119,7 @@ reviewed OAuth 2.0 implementation rather than edits hidden inside this sample.
   attempt, including status, size, and transport failures.
 - Cleanup failures do not replace the primary request, response-read, or parse
   error. JSON resource paths reject malformed JSON without exposing the body.
+- JSON response validation follows bounded percent-decoding of the protected-resource path without rewriting the signed request target.
 - Created HTTPS connections are closed exactly once after cached-token or
   interactive OAuth calls finish, including failure paths.
 - Interactive authorization never prints OAuth token secrets. Optional debug

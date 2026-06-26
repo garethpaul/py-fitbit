@@ -57,6 +57,7 @@ Priority:
 - Keep `FitbitResponseError` backward-compatible with `IOError` while exposing
   stable `operation`, `reason`, `status`, and `limit` fields without provider
   response bodies
+- JSON response validation follows bounded percent-decoding of the protected-resource path without rewriting the signed request target.
 
 Next priorities:
 

@@ -321,6 +321,14 @@ def validate_api_call(api_call):
    return api_call
 
 
+def api_call_requires_json_validation(api_call):
+   path = urlparse.urlsplit(api_call).path
+   return any(
+      decoded_path.lower().endswith('.json')
+      for decoded_path in decoded_layers(path)
+   )
+
+
 def fetch_response(oauth_request, connection, debug=DEBUG):
    url= oauth_request.to_url()
    connection.request(oauth_request.http_method,url)
@@ -411,7 +419,7 @@ def fitbit(api_call):
       connection.request('GET', api_call, headers=headers)
       resp = connection.getresponse()
       data = read_success_response(resp, 'protected resource request')
-      if urlparse.urlsplit(api_call).path.lower().endswith('.json'):
+      if api_call_requires_json_validation(api_call):
          validate_json_response(data)
    except Exception:
       if connection is not None:
