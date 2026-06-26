@@ -11,6 +11,42 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 class CheckerIntegrityTest(unittest.TestCase):
+    def test_legacy_runtime_and_current_fitbit_boundary_mutation_is_rejected(self):
+        working_directory = tempfile.mkdtemp(prefix="py-fitbit-doc-boundary-")
+        self.addCleanup(shutil.rmtree, working_directory)
+        checkout = os.path.join(working_directory, "checkout")
+        shutil.copytree(
+            ROOT,
+            checkout,
+            ignore=shutil.ignore_patterns(".git", "*.pyc", "__pycache__"),
+        )
+
+        readme_path = os.path.join(checkout, "README.md")
+        with open(readme_path, "r") as handle:
+            readme_source = handle.read()
+        weakened_source = readme_source.replace("`oauth==1.0.1`", "an OAuth package")
+        weakened_source = weakened_source.replace(
+            "Current Fitbit Web API documentation uses OAuth 2.0.",
+            "Fitbit supports OAuth.",
+        )
+        with open(readme_path, "w") as handle:
+            handle.write(weakened_source)
+
+        environment = os.environ.copy()
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        process = subprocess.Popen(
+            [sys.executable, "scripts/check_legacy_fitbit.py"],
+            cwd=checkout,
+            env=environment,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        stdout, stderr = process.communicate()
+
+        self.assertNotEqual(0, process.returncode, stdout + stderr)
+        self.assertIn(b"README must document historical runtime dependency", stderr)
+        self.assertIn(b"README must document the current Fitbit OAuth 2.0 boundary", stderr)
+
     def test_combined_loader_and_test_disable_mutation_is_rejected(self):
         working_directory = tempfile.mkdtemp(prefix="py-fitbit-checker-")
         self.addCleanup(shutil.rmtree, working_directory)

@@ -141,6 +141,21 @@ if not CODEOWNERS.exists() or CODEOWNERS.read_text().strip() != "* @garethpaul":
 if "GitHub Actions" not in README:
     errors.append("README must document the GitHub Actions check")
 
+if "`oauth==1.0.1`" not in README or "disposable Python 2.7 environment" not in README:
+    errors.append("README must document historical runtime dependency oauth==1.0.1")
+
+if "Current Fitbit Web API documentation uses OAuth 2.0." not in README:
+    errors.append("README must document the current Fitbit OAuth 2.0 boundary")
+
+for setup_source in [
+    "https://pypi.org/project/oauth/",
+    "https://www.python.org/doc/sunset-python-2/",
+    "https://dev.fitbit.com/build/reference/web-api/authorization/",
+    "https://dev.fitbit.com/build/reference/web-api/explore/",
+]:
+    if setup_source not in README:
+        errors.append("README must preserve primary setup source %s" % setup_source)
+
 for recursive_dot_segment_guidance in [
     "any percent-decoding layer",
     "including encoded path separators",
