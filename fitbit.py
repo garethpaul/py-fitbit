@@ -51,6 +51,23 @@ CREDENTIAL_QUERY_PARAMETERS = set([
 ])
 
 
+class FitbitResponseError(IOError):
+   def __init__(self, operation, reason, status=None, limit=None):
+      self.operation = operation
+      self.reason = reason
+      self.status = status
+      self.limit = limit
+      if reason == 'http_status':
+         message = 'Fitbit %s failed with HTTP status %s' % (operation, status)
+      elif reason == 'response_too_large':
+         message = 'Fitbit %s response exceeds %s bytes' % (operation, limit)
+      elif reason == 'invalid_json':
+         message = 'Fitbit %s returned invalid JSON' % operation
+      else:
+         message = 'Fitbit %s failed' % operation
+      IOError.__init__(self, message)
+
+
 def token_cache_flags(flags):
    if hasattr(os, 'O_NOFOLLOW'):
       flags |= os.O_NOFOLLOW
@@ -178,11 +195,11 @@ def close_fd_suppressing_errors(fd):
       pass
 
 
-def validate_json_response(body):
+def validate_json_response(body, operation='protected resource request'):
    try:
       json.loads(body)
    except (TypeError, ValueError, RuntimeError):
-      raise IOError('Fitbit protected resource returned invalid JSON')
+      raise FitbitResponseError(operation, 'invalid_json')
 
 
 def read_access_token_string(fname=ACCESS_TOKEN_STRING_FNAME):
@@ -321,11 +338,10 @@ def read_success_response(response, operation):
       body = response.read(MAX_RESPONSE_BODY_BYTES + 1)
       status = getattr(response, 'status', None)
       if status is None or status < 200 or status >= 300:
-         raise IOError('Fitbit %s failed with HTTP status %s' % (operation, status))
+         raise FitbitResponseError(operation, 'http_status', status=status)
       if len(body) > MAX_RESPONSE_BODY_BYTES:
-         raise IOError(
-            'Fitbit %s response exceeds %s bytes' %
-            (operation, MAX_RESPONSE_BODY_BYTES))
+         raise FitbitResponseError(
+            operation, 'response_too_large', limit=MAX_RESPONSE_BODY_BYTES)
    except Exception:
       close_suppressing_errors(response)
       raise

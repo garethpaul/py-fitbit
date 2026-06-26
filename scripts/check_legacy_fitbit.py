@@ -34,6 +34,7 @@ CI_PLANS = [
     ROOT / "docs" / "plans" / "2026-06-16-atomic-token-cache-publication.md",
     ROOT / "docs" / "plans" / "2026-06-17-recursive-dot-segment-validation.md",
     ROOT / "docs" / "plans" / "2026-06-19-tracked-settings-module.md",
+    ROOT / "docs" / "plans" / "2026-06-26-structured-fitbit-response-errors.md",
 ]
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
 CODEOWNERS = ROOT / ".github" / "CODEOWNERS"
@@ -667,6 +668,35 @@ if "CREDENTIAL_QUERY_PARAMETERS" not in SOURCE or "urlparse.parse_qsl" not in SO
 if "read_success_response" not in SOURCE or "status < 200" not in SOURCE or "status >= 300" not in SOURCE:
     errors.append("fitbit.py must reject non-2xx Fitbit HTTP responses")
 
+structured_error_contracts = [
+    "class FitbitResponseError(IOError):",
+    "self.operation = operation",
+    "self.reason = reason",
+    "self.status = status",
+    "self.limit = limit",
+    "reason == 'http_status'",
+    "reason == 'response_too_large'",
+    "reason == 'invalid_json'",
+    "raise FitbitResponseError(operation, 'http_status', status=status)",
+    "operation, 'response_too_large', limit=MAX_RESPONSE_BODY_BYTES",
+    "raise FitbitResponseError(operation, 'invalid_json')",
+]
+if any(contract not in SOURCE for contract in structured_error_contracts):
+    errors.append("structured Fitbit response error contract failed")
+
+structured_test_contracts = [
+    "with self.assertRaises(fitbit.FitbitResponseError)",
+    "raised.exception.operation",
+    "raised.exception.reason",
+    "raised.exception.status",
+    "raised.exception.limit",
+    "'http_status'",
+    "'response_too_large'",
+    "'invalid_json'",
+]
+if any(contract not in TEST_SOURCE for contract in structured_test_contracts):
+    errors.append("legacy tests must preserve structured Fitbit response error fields")
+
 if "read_success_response(resp, 'protected resource request')" not in SOURCE:
     errors.append("protected Fitbit resource calls must enforce HTTP status checks")
 
@@ -817,6 +847,14 @@ for document_name in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
         errors.append("%s must document dangling token-cache symlink rejection" % document_name)
     if "non-regular token-cache paths" not in document:
         errors.append("%s must document non-regular token-cache path rejection" % document_name)
+    if "FitbitResponseError" not in document or "operation" not in document or "reason" not in document:
+        errors.append("%s must document structured Fitbit response errors" % document_name)
+
+vision = (ROOT / "VISION.md").read_text()
+if "Return structured errors instead of printing debug responses by default" in vision:
+    errors.append("VISION must retire the completed structured-response-error roadmap item")
+if "No unclaimed roadmap item" not in vision:
+    errors.append("VISION must record that structured response errors completed the queued roadmap")
 
 dangling_symlink_plan = (
     ROOT / "docs" / "plans" / "2026-06-14-dangling-token-cache-symlink.md"
@@ -838,6 +876,17 @@ if (
     or "make check" not in regular_cache_plan.read_text()
 ):
     errors.append("regular token-cache plan must record completed verification")
+
+structured_error_plan = (
+    ROOT / "docs" / "plans" / "2026-06-26-structured-fitbit-response-errors.md"
+).read_text()
+if (
+    "## Status: Completed" not in structured_error_plan
+    or "FitbitResponseError" not in structured_error_plan
+    or "hostile mutation" not in structured_error_plan.lower()
+    or "make check" not in structured_error_plan
+):
+    errors.append("structured Fitbit response error plan must record completed verification")
 
 for document_name in ["README.md", "SECURITY.md", "CHANGES.md"]:
     document = (ROOT / document_name).read_text().lower()

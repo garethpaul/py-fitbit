@@ -37,6 +37,10 @@ Helpful reports include:
 - No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
 - GitHub Actions runs the full mocked `make check` baseline in a pinned Python
   2 container without persisted checkout credentials.
+- Privacy-safe response failures use `FitbitResponseError`, an `IOError`
+  subclass with stable `operation`, `reason`, `status`, and `limit` metadata.
+  Provider response bodies are neither stored on the exception nor included in
+  its message.
 
 ## Service and API Notes
 

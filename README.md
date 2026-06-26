@@ -109,6 +109,10 @@ reviewed OAuth 2.0 implementation rather than edits hidden inside this sample.
   other permissions are rejected before a Fitbit network request is opened.
 - OAuth token exchanges and protected resource calls reject non-2xx HTTP
   responses without including the upstream response body in the exception.
+- `FitbitResponseError` remains an `IOError` for existing callers while exposing
+  stable `operation`, `reason`, `status`, and `limit` fields for HTTP-status,
+  oversized-response, and invalid-JSON failures. It never stores the upstream
+  response body.
 - OAuth and protected-resource paths use bounded response reads of 1 MiB plus
   one detection byte and reject oversized credential or health-data payloads.
 - OAuth and protected-resource response objects are closed after every read
