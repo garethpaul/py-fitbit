@@ -579,12 +579,16 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         original_stdout = sys.stdout
         try:
             sys.stdout = StringIO.StringIO()
-            with self.assertRaises(IOError) as raised:
+            with self.assertRaises(fitbit.FitbitResponseError) as raised:
                 fitbit.fitbit('/1/user/-/profile.json')
         finally:
             sys.stdout = original_stdout
 
         self.assertIn('OAuth request failed with HTTP status 503', str(raised.exception))
+        self.assertEqual('OAuth request', raised.exception.operation)
+        self.assertEqual('http_status', raised.exception.reason)
+        self.assertEqual(503, raised.exception.status)
+        self.assertIsNone(raised.exception.limit)
         self.assertFalse(os.path.exists(fitbit.ACCESS_TOKEN_STRING_FNAME))
         self.assertEqual([], FakeOAuthToken.parsed_values)
         self.assertEqual(1, FakeHTTPResponse.instances[0].close_calls)
@@ -598,7 +602,7 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         original_stdout = sys.stdout
         try:
             sys.stdout = StringIO.StringIO()
-            with self.assertRaises(IOError) as raised:
+            with self.assertRaises(fitbit.FitbitResponseError) as raised:
                 fitbit.fitbit('/1/user/-/profile.json')
         finally:
             sys.stdout = original_stdout
@@ -608,6 +612,10 @@ class FitbitOAuthRequestTest(unittest.TestCase):
             str(raised.exception),
         )
         self.assertNotIn('not authorized', str(raised.exception))
+        self.assertEqual('protected resource request', raised.exception.operation)
+        self.assertEqual('http_status', raised.exception.reason)
+        self.assertEqual(401, raised.exception.status)
+        self.assertIsNone(raised.exception.limit)
         self.assertEqual(1, FakeHTTPResponse.instances[0].close_calls)
         self.assertEqual(1, FakeHTTPSConnection.instances[0].close_calls)
 
@@ -618,13 +626,17 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         original_stdout = sys.stdout
         try:
             sys.stdout = StringIO.StringIO()
-            with self.assertRaises(IOError) as raised:
+            with self.assertRaises(fitbit.FitbitResponseError) as raised:
                 fitbit.fitbit('/1/user/-/profile.json')
         finally:
             sys.stdout = original_stdout
 
         self.assertIn('OAuth request response exceeds', str(raised.exception))
         self.assertNotIn('oauth_token=secret', str(raised.exception))
+        self.assertEqual('OAuth request', raised.exception.operation)
+        self.assertEqual('response_too_large', raised.exception.reason)
+        self.assertIsNone(raised.exception.status)
+        self.assertEqual(fitbit.MAX_RESPONSE_BODY_BYTES, raised.exception.limit)
         self.assertEqual([fitbit.MAX_RESPONSE_BODY_BYTES + 1], FakeHTTPResponse.read_sizes)
         self.assertEqual([], FakeOAuthToken.parsed_values)
         self.assertFalse(os.path.exists(fitbit.ACCESS_TOKEN_STRING_FNAME))
@@ -638,13 +650,17 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         original_stdout = sys.stdout
         try:
             sys.stdout = StringIO.StringIO()
-            with self.assertRaises(IOError) as raised:
+            with self.assertRaises(fitbit.FitbitResponseError) as raised:
                 fitbit.fitbit('/1/user/-/profile.json')
         finally:
             sys.stdout = original_stdout
 
         self.assertIn('protected resource request response exceeds', str(raised.exception))
         self.assertNotIn('private-health-data', str(raised.exception))
+        self.assertEqual('protected resource request', raised.exception.operation)
+        self.assertEqual('response_too_large', raised.exception.reason)
+        self.assertIsNone(raised.exception.status)
+        self.assertEqual(fitbit.MAX_RESPONSE_BODY_BYTES, raised.exception.limit)
         self.assertEqual([fitbit.MAX_RESPONSE_BODY_BYTES + 1], FakeHTTPResponse.read_sizes)
         self.assertEqual(1, FakeHTTPResponse.instances[0].close_calls)
 
@@ -657,13 +673,17 @@ class FitbitOAuthRequestTest(unittest.TestCase):
         original_stdout = sys.stdout
         try:
             sys.stdout = StringIO.StringIO()
-            with self.assertRaises(IOError) as raised:
+            with self.assertRaises(fitbit.FitbitResponseError) as raised:
                 fitbit.fitbit('/1/user/-/profile.json')
         finally:
             sys.stdout = original_stdout
 
         self.assertIn('invalid JSON', str(raised.exception))
         self.assertNotIn('private-health-data', str(raised.exception))
+        self.assertEqual('protected resource request', raised.exception.operation)
+        self.assertEqual('invalid_json', raised.exception.reason)
+        self.assertIsNone(raised.exception.status)
+        self.assertIsNone(raised.exception.limit)
         self.assertEqual(1, FakeHTTPResponse.instances[0].close_calls)
         self.assertEqual(1, FakeHTTPSConnection.instances[0].close_calls)
 

@@ -54,10 +54,14 @@ Priority:
   disposable Python 2.7 setup explicit
 - Keep this OAuth 1.0a sample clearly separated from Fitbit's currently
   documented OAuth 2.0 integration flow
+- Keep `FitbitResponseError` backward-compatible with `IOError` while exposing
+  stable `operation`, `reason`, `status`, and `limit` fields without provider
+  response bodies
 
 Next priorities:
 
-- Return structured errors instead of printing debug responses by default
+- No unclaimed roadmap item; select future work from reproduced defects,
+  provider API changes, dependency advisories, or reviewed caller needs.
 
 Contribution rules:
 

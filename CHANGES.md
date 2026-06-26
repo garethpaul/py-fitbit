@@ -1,5 +1,67 @@
 # Changes
 
+## 2026-06-26 02:43 PDT - P2 - Structure Fitbit response failures
+
+### Summary
+
+Replaced string-only response failures with a backward-compatible structured
+exception while preserving privacy-safe messages, cleanup, and transport error
+behavior.
+
+### Work completed
+
+- Added `FitbitResponseError(IOError)` with stable `operation`, `reason`,
+  `status`, and `limit` fields.
+- Applied structured reasons to non-2xx, oversized-body, and invalid-JSON
+  failures without storing or parsing provider error bodies.
+- Extended the mocked Python 2/3 suite across OAuth and protected-resource
+  failures and added a hostile checker-integrity mutation.
+- Retired the completed structured-error roadmap item without inventing new
+  work.
+
+### Threads
+
+- Started: none — implementation and verification were completed directly.
+- Continued: none.
+- Stopped: none.
+
+### Files changed
+
+- `fitbit.py` — defines and raises the structured response exception.
+- `tests/test_fitbit_oauth_request.py` — verifies fields and compatibility.
+- `scripts/check_legacy_fitbit.py` and `tests/test_checker_integrity.py` — bind
+  runtime, test, documentation, roadmap, and plan contracts.
+- `README.md`, `SECURITY.md`, `VISION.md`, and
+  `docs/plans/2026-06-26-structured-fitbit-response-errors.md` — document the
+  API, privacy boundary, scope, and evidence.
+
+### Validation
+
+- Red-first Python 3 tests — five failures because `FitbitResponseError` did not
+  exist.
+- Focused Python 2.7 and Python 3 mocked suites — 37 tests passed in each
+  runtime after implementation.
+- Red-first checker-integrity test — proved the checker initially accepted an
+  exception that no longer inherited `IOError`.
+- Complete local, container, external-directory, and mutation evidence is
+  recorded in the completed plan; hosted exact-head verification remains the
+  next action.
+
+### Bugs / findings
+
+- P2: callers had to parse human `IOError` strings to distinguish HTTP status,
+  size-boundary, and JSON failures.
+
+### Blockers
+
+- Host Python 2 is unavailable; the digest-pinned Python 2.7.18 container and
+  hosted workflow remain authoritative for legacy execution.
+
+### Next action
+
+- Run the full exact-head gate, review the PR, and merge only after hosted
+  Python 2.7 verification passes.
+
 ## 2026-06-26 01:10 PDT - P2 - Define the legacy runtime and current API boundary
 
 ### Summary
