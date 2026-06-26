@@ -35,6 +35,7 @@ CI_PLANS = [
     ROOT / "docs" / "plans" / "2026-06-17-recursive-dot-segment-validation.md",
     ROOT / "docs" / "plans" / "2026-06-19-tracked-settings-module.md",
     ROOT / "docs" / "plans" / "2026-06-26-structured-fitbit-response-errors.md",
+    ROOT / "docs" / "plans" / "2026-06-26-encoded-json-response-validation.md",
 ]
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "check.yml"
 CODEOWNERS = ROOT / ".github" / "CODEOWNERS"
@@ -697,6 +698,16 @@ structured_test_contracts = [
 if any(contract not in TEST_SOURCE for contract in structured_test_contracts):
     errors.append("legacy tests must preserve structured Fitbit response error fields")
 
+encoded_json_contracts = [
+    "def api_call_requires_json_validation(api_call):",
+    "for decoded_path in decoded_layers(path)",
+    "if api_call_requires_json_validation(api_call):",
+]
+if any(contract not in SOURCE for contract in encoded_json_contracts):
+    errors.append("encoded JSON response validation contract failed")
+if "test_rejects_malformed_json_for_encoded_json_extension" not in TEST_SOURCE:
+    errors.append("legacy tests must preserve encoded JSON response validation")
+
 if "read_success_response(resp, 'protected resource request')" not in SOURCE:
     errors.append("protected Fitbit resource calls must enforce HTTP status checks")
 
@@ -849,6 +860,8 @@ for document_name in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
         errors.append("%s must document non-regular token-cache path rejection" % document_name)
     if "FitbitResponseError" not in document or "operation" not in document or "reason" not in document:
         errors.append("%s must document structured Fitbit response errors" % document_name)
+    if "JSON response validation follows bounded percent-decoding of the protected-resource path without rewriting the signed request target." not in document:
+        errors.append("%s must document encoded JSON response validation" % document_name)
 
 vision = (ROOT / "VISION.md").read_text()
 if "Return structured errors instead of printing debug responses by default" in vision:

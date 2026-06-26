@@ -6,6 +6,8 @@ The supported security scope for `py-fitbit` is the current default branch, `mas
 
 Project summary: Fitbit Auth
 
+JSON response validation follows bounded percent-decoding of the protected-resource path without rewriting the signed request target.
+
 ## Reporting a Vulnerability
 
 Please report suspected vulnerabilities through GitHub's private vulnerability reporting or by opening a draft GitHub Security Advisory for `garethpaul/py-fitbit` when that option is available. If GitHub does not show a private reporting option for this repository, contact the repository owner through GitHub and avoid posting exploit details publicly until the issue can be assessed.

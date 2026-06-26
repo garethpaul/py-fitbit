@@ -1,5 +1,70 @@
 # Changes
 
+## 2026-06-26 13:33 PDT - P2 - Validate encoded JSON resource responses
+
+### Summary
+
+Closed a response-validation gap where encoded `.json` resource paths could
+return malformed JSON without raising the privacy-safe structured error.
+
+### Work completed
+
+- Added bounded percent-decoding when classifying protected-resource paths for
+  JSON response validation.
+- Preserved the exact path used for OAuth signing and the HTTPS request.
+- Added a red-first regression test and a hostile checker-integrity mutation.
+- JSON response validation follows bounded percent-decoding of the protected-resource path without rewriting the signed request target.
+
+### Threads
+
+- Started: none — the defect was reproduced and fixed directly.
+- Continued: none.
+- Stopped: none.
+
+### Files changed
+
+- `fitbit.py` — classifies encoded JSON paths without rewriting them.
+- `tests/test_fitbit_oauth_request.py` — verifies malformed encoded JSON fails
+  while the signed and transmitted target remains unchanged.
+- `scripts/check_legacy_fitbit.py` and `tests/test_checker_integrity.py` — bind
+  the source, test, documentation, and hostile-mutation contracts.
+- `README.md`, `SECURITY.md`, `VISION.md`, and
+  `docs/plans/2026-06-26-encoded-json-response-validation.md` — record scope,
+  compatibility, and verification evidence.
+
+### Validation
+
+- Red-first Python 3 regression test — failed because malformed JSON on
+  `/1/user/-/profile%2Ejson` did not raise `FitbitResponseError`.
+- Focused Python 3 mocked OAuth suite — 38 tests passed after implementation.
+- Complete digest-pinned, network-disabled Python 2.7.18 `make check` — Python
+  2 and Python 3 OAuth suites passed 38 tests each, settings suites passed 12
+  tests each, checker integrity passed 4 tests, and all 49 Make authority cases
+  passed.
+- `git diff --check` passed; exact-head review and hosted verification remain
+  the next actions.
+- Hosted Python 2.7 verification and CodeQL passed on PR #20.
+- `$codex-review` was invoked against `origin/master` but OpenAI authentication
+  returned HTTP 401 before analysis; an immutable manual review of the matching
+  local and PR head found no actionable issue.
+
+### Bugs / findings
+
+- P2: encoded `.json` paths bypassed malformed-JSON response validation even
+  though Fitbit receives the decoded resource extension.
+
+### Blockers
+
+- Host Python 2 is unavailable; the digest-pinned Python 2.7.18 container is
+  authoritative for legacy execution.
+- The Codex review helper cannot authenticate to the OpenAI API in this
+  environment; no model finding was produced or silently ignored.
+
+### Next action
+
+- Re-run exact-head gates after this evidence-only amendment and merge only the
+  reviewed hosted-green head.
+
 ## 2026-06-26 02:43 PDT - P2 - Structure Fitbit response failures
 
 ### Summary
