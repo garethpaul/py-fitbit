@@ -1,5 +1,75 @@
 # Changes
 
+## 2026-06-26 01:10 PDT - P2 - Define the legacy runtime and current API boundary
+
+### Summary
+
+Documented the exact Python 2 OAuth dependency and made clear that current
+Fitbit Web API documentation describes OAuth 2.0 rather than this historical
+OAuth 1.0a flow.
+
+### Work completed
+
+- Identified PyPI `oauth==1.0.1` as the package providing
+  `from oauth import oauth` and verified its import in the pinned Python 2.7
+  container.
+- Added disposable-runtime install and import commands without introducing a
+  requirements file or dependency installation into CI.
+- Added official Fitbit OAuth 2.0 references and a warning against new
+  applications, live credentials, or health data.
+- Added static README contracts plus a hostile mutation that removes both the
+  dependency and current-protocol guidance.
+- Updated the roadmap, security posture, README, and completed plan.
+
+### Threads
+
+- Started: none — work completed directly in this maintenance cycle.
+- Continued: none.
+- Stopped: none.
+
+### Files changed
+
+- `README.md`, `VISION.md`, and `SECURITY.md` — setup, support, and responsible
+  use boundaries.
+- `scripts/check_legacy_fitbit.py` and `tests/test_checker_integrity.py` — static
+  and hostile-mutation coverage.
+- `docs/plans/2026-06-26-legacy-runtime-and-fitbit-api-boundary.md` and
+  `CHANGES.md` — scope and cycle evidence.
+
+### Validation
+
+- Red phase: the checker accepted a README with both new contracts removed.
+- PyPI `oauth==1.0.1` installed and its `OAuthConsumer` import passed in the
+  digest-pinned Python 2.7.18 container.
+- The checkout-local and absolute-Makefile `make check` gates passed in the
+  digest-pinned, network-disabled Python 2.7.18 container, including Python 2
+  and Python 3 mocked OAuth suites, both checker-integrity mutations, and 49
+  Make target/authority cases.
+- `python3 scripts/check_legacy_fitbit.py` and `git diff --check` passed on the
+  host; host Python 2 is intentionally unavailable, so the pinned container is
+  authoritative for legacy execution.
+- `codex review --base origin/master` was attempted but the external service
+  returned HTTP 401 before analysis; manual review of the sourced claims,
+  install command, static contracts, hostile mutation, and unchanged runtime
+  found no actionable issue, and the run continued under the instruction to
+  skip auth failures.
+
+### Bugs / findings
+
+- P2: setup named Python 2.7 but omitted the package that satisfies the source
+  import.
+- P2: the README did not distinguish the historical OAuth 1.0a example from
+  Fitbit's currently documented OAuth 2.0 API.
+
+### Blockers
+
+- External Codex review authentication is unavailable in this environment.
+
+### Next action
+
+- Open the focused PR, attempt Codex review, and merge only the exact head after
+  hosted checks pass.
+
 ## 2026-06-21
 
 - Hardened all six pre-existing Make gates against `MAKEFILE_LIST` and

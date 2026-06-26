@@ -35,9 +35,15 @@ Additional scan context:
 ### Prerequisites
 
 - Git
-- Python 2.7 for the legacy sample syntax check
+- Python 2.7 for the legacy sample syntax check and historical runtime. Python
+  2 reached end of life on January 1, 2020; use only a disposable Python 2.7
+  environment, never a system interpreter or production host. See the
+  [Python 2 sunset notice](https://www.python.org/doc/sunset-python-2/).
 - Python 3 for repository safety checks
 - `make`
+- PyPI [`oauth==1.0.1`](https://pypi.org/project/oauth/) only when importing or
+  running `fitbit.py`. This is the package that provides
+  `from oauth import oauth`; the mocked repository gate does not install it.
 
 ### Setup
 
@@ -47,6 +53,30 @@ cd py-fitbit
 ```
 
 The setup commands above are derived from repository files. Legacy mobile, Python, or JavaScript samples may require older SDKs or package versions than a modern workstation uses by default.
+
+For an isolated historical runtime, install and verify the exact import inside
+the disposable Python 2.7 environment:
+
+```bash
+python2 -m pip install --no-cache-dir 'oauth==1.0.1'
+python2 -c "from oauth import oauth; assert hasattr(oauth, 'OAuthConsumer')"
+```
+
+Do not add credentials or live health data merely to test setup. `make check`
+uses mocks and requires no Fitbit account or network access.
+
+### Current Fitbit API Boundary
+
+Current Fitbit Web API documentation uses OAuth 2.0. The official
+[authorization reference](https://dev.fitbit.com/build/reference/web-api/authorization/)
+and [Web API explorer](https://dev.fitbit.com/build/reference/web-api/explore/)
+document OAuth 2.0 token endpoints and bearer access tokens. They do not
+document this OAuth 1.0a flow as a supported current integration.
+
+Treat `fitbit.py` as a historical OAuth 1.0a example. Do not use it for new
+applications or assume that its live request-token and access-token flow still
+works with current Fitbit accounts. A current integration needs a separate,
+reviewed OAuth 2.0 implementation rather than edits hidden inside this sample.
 
 ## Running or Using the Project
 
@@ -194,6 +224,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   HTTPS connection cleanup after each client call.
 - See `docs/plans/2026-06-19-tracked-settings-module.md` for the tracked,
   fail-closed environment loader and canonical gate integration.
+- See `docs/plans/2026-06-26-legacy-runtime-and-fitbit-api-boundary.md` for the
+  exact historical dependency and current Fitbit OAuth support boundary.
 
 ## Contributing
 

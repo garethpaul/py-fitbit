@@ -24,6 +24,11 @@ Helpful reports include:
 
 ## Project Security Posture
 
+- The checked-in flow is a historical OAuth 1.0a sample. Current Fitbit Web API
+  documentation uses OAuth 2.0 and does not document this flow as a supported
+  current integration; do not use the sample for new applications or live
+  health data.
+
 - This repository appears to be a public sample, documentation, or utility project. The active security scope is the code and documentation on the default branch.
 - Review found authentication, token, or session-related code paths; changes in those areas should receive security-focused review before merge.
 - Review found external API integrations or credential-adjacent configuration; changes in those areas should receive security-focused review before merge.

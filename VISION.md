@@ -50,12 +50,14 @@ Priority:
   skipping mocked OAuth coverage
 - Keep completed maintenance plans under `docs/plans`
 - Keep the static `make check` baseline running in GitHub Actions
+- Keep the exact opt-in historical runtime dependency (`oauth==1.0.1`) and
+  disposable Python 2.7 setup explicit
+- Keep this OAuth 1.0a sample clearly separated from Fitbit's currently
+  documented OAuth 2.0 integration flow
 
 Next priorities:
 
-- Expand README setup notes for Python version and dependencies
 - Return structured errors instead of printing debug responses by default
-- Document whether current Fitbit APIs still support the demonstrated flow
 
 Contribution rules:
 
