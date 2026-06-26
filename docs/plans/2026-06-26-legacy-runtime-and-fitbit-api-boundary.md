@@ -59,3 +59,6 @@ network behavior.
   suites, both checker-integrity mutations, and 49 Make target/authority cases.
 - Host static checks and `git diff --check` passed. Hosted verification remains
   required before merge.
+- `codex review --base origin/master` was attempted but returned HTTP 401 before
+  analysis. Manual review found no actionable issue in the primary-source
+  claims, exact dependency command, checker contracts, or runtime scope.

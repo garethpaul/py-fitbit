@@ -48,6 +48,11 @@ OAuth 1.0a flow.
 - `python3 scripts/check_legacy_fitbit.py` and `git diff --check` passed on the
   host; host Python 2 is intentionally unavailable, so the pinned container is
   authoritative for legacy execution.
+- `codex review --base origin/master` was attempted but the external service
+  returned HTTP 401 before analysis; manual review of the sourced claims,
+  install command, static contracts, hostile mutation, and unchanged runtime
+  found no actionable issue, and the run continued under the instruction to
+  skip auth failures.
 
 ### Bugs / findings
 
@@ -58,7 +63,7 @@ OAuth 1.0a flow.
 
 ### Blockers
 
-- None.
+- External Codex review authentication is unavailable in this environment.
 
 ### Next action
 
